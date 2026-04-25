@@ -1,0 +1,45 @@
+{
+  "run_date_utc": "2026-04-25",
+  "generator": "gsc_pull.py",
+  "version": "1.0",
+  "site": "sc-domain:example.com",
+  "window": {"start": "2026-03-26", "end": "2026-04-22", "days": 28, "lag_days": 3},
+  "summary": {
+    "clicks": 142,
+    "impressions": 8420,
+    "ctr": 0.0169,
+    "position_avg": 18.4,
+    "queries_total": 187
+  },
+  "countries": {
+    "usa": {"clicks": 96, "impressions": 5200},
+    "latam": {"clicks": 12, "impressions": 480},
+    "other": {"clicks": 34, "impressions": 2740}
+  },
+  "devices": {
+    "mobile": {"clicks": 58, "impressions": 3100},
+    "desktop": {"clicks": 84, "impressions": 5320},
+    "tablet": {"clicks": 0, "impressions": 0}
+  },
+  "striking_distance": {
+    "criteria": {
+      "position_range": [5.0, 20.0],
+      "min_impressions": 50
+    },
+    "queries": [
+      {"query": "example category buyer query", "clicks": 4, "impressions": 320, "ctr": 0.0125, "position": 12.4},
+      {"query": "your category in geography", "clicks": 2, "impressions": 180, "ctr": 0.0111, "position": 8.7},
+      {"query": "specific niche term", "clicks": 1, "impressions": 95, "ctr": 0.0105, "position": 16.2}
+    ]
+  },
+  "top_queries": [
+    {"query": "your brand name", "clicks": 42, "impressions": 110, "ctr": 0.382, "position": 1.4},
+    {"query": "example category buyer query", "clicks": 4, "impressions": 320, "ctr": 0.0125, "position": 12.4},
+    {"query": "your category in geography", "clicks": 2, "impressions": 180, "ctr": 0.0111, "position": 8.7}
+  ],
+  "top_pages": [
+    {"page": "https://example.com/", "clicks": 58, "impressions": 1200, "ctr": 0.048, "position": 6.2},
+    {"page": "https://example.com/services/your-category", "clicks": 24, "impressions": 680, "ctr": 0.035, "position": 9.1},
+    {"page": "https://example.com/blog/buyer-guide", "clicks": 18, "impressions": 510, "ctr": 0.035, "position": 11.4}
+  ]
+}

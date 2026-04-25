@@ -1,0 +1,111 @@
+{
+  "run_date_utc": "2026-04-25",
+  "generator": "prereqs_sweep.py",
+  "version": "1.0",
+  "sites": [
+    {
+      "name": "example.com",
+      "url": "https://example.com",
+      "owner": "self",
+      "checked_at_utc": "2026-04-25T14:00:00+00:00",
+      "robots": {
+        "url": "https://example.com/robots.txt",
+        "status": 200,
+        "exists": true,
+        "size": 512,
+        "error": null,
+        "verdicts": {
+          "GPTBot": "allow",
+          "ClaudeBot": "allow",
+          "PerplexityBot": "allow",
+          "Google-Extended": "allow",
+          "Applebot-Extended": "allow",
+          "CCBot": "allow",
+          "Bytespider": "disallow-some",
+          "Meta-ExternalAgent": "disallow-some"
+        },
+        "sitemaps_declared": ["https://example.com/sitemap.xml"]
+      },
+      "llms": {
+        "url": "https://example.com/llms.txt",
+        "status": 200,
+        "exists": true,
+        "size": 4200,
+        "first_line": "# example.com"
+      },
+      "sitemap": {
+        "url": "https://example.com/sitemap.xml",
+        "status": 200,
+        "exists": true,
+        "size": 38000,
+        "is_sitemap_index": false,
+        "child_sitemaps_declared": 0,
+        "child_sitemaps_sampled": 0,
+        "urls_in_sampled_children": 95
+      },
+      "reachable": {
+        "status": 200,
+        "ok": true,
+        "error": null,
+        "latency_ms": 180
+      },
+      "score": {
+        "score": 100,
+        "points": 75,
+        "max": 75
+      }
+    },
+    {
+      "name": "client-one.com",
+      "url": "https://client-one.com",
+      "owner": "client",
+      "checked_at_utc": "2026-04-25T14:00:00+00:00",
+      "robots": {
+        "url": "https://client-one.com/robots.txt",
+        "status": 200,
+        "exists": true,
+        "size": 240,
+        "error": null,
+        "verdicts": {
+          "GPTBot": "allow",
+          "ClaudeBot": "disallow-some",
+          "PerplexityBot": "allow",
+          "Google-Extended": "allow",
+          "Applebot-Extended": "disallow-some",
+          "CCBot": "allow",
+          "Bytespider": "disallow-some",
+          "Meta-ExternalAgent": "disallow-some"
+        },
+        "sitemaps_declared": ["https://client-one.com/sitemap.xml"]
+      },
+      "llms": {
+        "url": "https://client-one.com/llms.txt",
+        "status": 404,
+        "exists": false,
+        "size": 0,
+        "first_line": null
+      },
+      "sitemap": {
+        "url": "https://client-one.com/sitemap.xml",
+        "status": 200,
+        "exists": true,
+        "size": 1100,
+        "is_sitemap_index": true,
+        "child_sitemaps_declared": 4,
+        "child_sitemaps_sampled": 3,
+        "urls_in_sampled_children": 320
+      },
+      "reachable": {
+        "status": 200,
+        "ok": true,
+        "error": null,
+        "latency_ms": 450
+      },
+      "score": {
+        "score": 80,
+        "points": 60,
+        "max": 75
+      }
+    }
+  ]
+}

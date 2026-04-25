@@ -1,0 +1,26 @@
+# Target Queries · AI Visibility Monitor
+
+> Five buyer queries. The script queries each one monthly and records whether your domain is cited.
+> Edit this file to change which queries are tracked. Keep it at 5 for focus. One query per line, no numbering, no quotes.
+
+example query about your category
+specific buyer query in your geography
+category-defining term you are trying to own
+product-specific query for your niche offering
+industry-specific buyer search
+
+## Rules for picking queries
+
+- **Buyer language, not keyword language.** Write what your ICP would actually type into Claude or Perplexity, not what a keyword tool thinks.
+- **Three-clicks-deep.** Each query should be something a buyer types after they already know what category they want. Generic terms have too much competition; specific terms are where you can win.
+- **One geo query.** Anchor a local signal if your business has a geographic angle. Skip if you're remote/global.
+- **One category-defining query.** A term you are trying to own as a category. Even if you are not cited today, tracking it monthly tells you when you start to appear.
+- **One product-specific query.** A niche where you have a real differentiated offering.
+
+## When to change this list
+
+- Once a query is consistently cited at position 1-3 for three months in a row, retire it and add a new target.
+- If a query is cited zero times for six months and competitor content is clearly better positioned for it, replace it.
+- If your positioning changes (new vertical, new service), update the list the same week.
+
+Log every change in git/commit history so the monthly JSON files stay interpretable against the query set that was active at that point in time.

@@ -1,0 +1,41 @@
+# Output data: your real GSC/GA4/citation results stay private
+data/
+
+# Local site config: copy sites.json.example to sites.json and edit
+sites.json
+
+# Local query config: copy queries.md.example to queries.md and edit
+queries.md
+
+# Credentials: never commit these
+*.json.key
+service-account.json
+client_secret*.json
+oauth-client*.json
+.env
+.env.*
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.venv/
+venv/
+env/
+*.egg-info/
+.pytest_cache/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editors
+.idea/
+.vscode/
+*.swp
+*~
+
+# Local notebooks for ad-hoc analysis
+*.ipynb
+.ipynb_checkpoints/

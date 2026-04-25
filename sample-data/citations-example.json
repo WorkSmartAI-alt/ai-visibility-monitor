@@ -1,0 +1,79 @@
+{
+  "run_date_utc": "2026-04-25",
+  "generator": "citation_check.py",
+  "version": "1.0",
+  "target_domain": "example.com",
+  "model": "claude-sonnet-4-6",
+  "runs_per_query": 2,
+  "summary": {
+    "queries_total": 5,
+    "queries_cited": 1,
+    "queries_uncited": 4
+  },
+  "queries": [
+    {
+      "query": "example buyer query in your category",
+      "runs": 2,
+      "cited": false,
+      "citation_rate": 0.0,
+      "position_mode": null,
+      "position_min": null,
+      "position_max": null,
+      "citations_union": [
+        {"url": "https://competitor-a.com/category-page", "title": "Competitor A category page", "domain": "competitor-a.com"},
+        {"url": "https://competitor-b.com/", "title": "Competitor B homepage", "domain": "competitor-b.com"},
+        {"url": "https://medium.com/top-tools-2026", "title": "Top tools listicle", "domain": "medium.com"}
+      ]
+    },
+    {
+      "query": "specific buyer query with your geography",
+      "runs": 2,
+      "cited": true,
+      "citation_rate": 1.0,
+      "position_mode": 3,
+      "position_min": 2,
+      "position_max": 3,
+      "citations_union": [
+        {"url": "https://example.com/services/your-category", "title": "Your service page", "domain": "example.com"},
+        {"url": "https://competitor-a.com/", "title": "Competitor A", "domain": "competitor-a.com"}
+      ]
+    },
+    {
+      "query": "category-defining term you are trying to own",
+      "runs": 2,
+      "cited": false,
+      "citation_rate": 0.0,
+      "position_mode": null,
+      "position_min": null,
+      "position_max": null,
+      "citations_union": [
+        {"url": "https://linkedin.com/pulse/example-thoughtpiece", "title": "LinkedIn Pulse article", "domain": "linkedin.com"},
+        {"url": "https://industry-blog.com/post", "title": "Industry blog post", "domain": "industry-blog.com"}
+      ]
+    },
+    {
+      "query": "product-specific query for your niche offering",
+      "runs": 2,
+      "cited": false,
+      "citation_rate": 0.0,
+      "position_mode": null,
+      "position_min": null,
+      "position_max": null,
+      "citations_union": [
+        {"url": "https://producthunt.com/posts/competitor", "title": "Product Hunt listing", "domain": "producthunt.com"}
+      ]
+    },
+    {
+      "query": "industry-specific buyer search",
+      "runs": 2,
+      "cited": false,
+      "citation_rate": 0.0,
+      "position_mode": null,
+      "position_min": null,
+      "position_max": null,
+      "citations_union": [
+        {"url": "https://trade-pub.com/article", "title": "Trade pub article", "domain": "trade-pub.com"}
+      ]
+    }
+  ]
+}

@@ -1,0 +1,61 @@
+{
+  "run_date_utc": "2026-04-25",
+  "generator": "ga4_pull.py",
+  "version": "1.0",
+  "property_id": "123456789",
+  "window": {"start": "2026-03-27", "end": "2026-04-23", "days": 28, "lag_days": 2},
+  "summary": {
+    "sessions": 1240,
+    "totalUsers": 980,
+    "activeUsers": 980,
+    "engagedSessions": 520,
+    "newUsers": 870,
+    "engagementRate": 0.42,
+    "conversions": 38
+  },
+  "ai_referrals": {
+    "total_sessions": 6,
+    "total_users": 5,
+    "breakdown": [
+      {"source": "chatgpt.com", "sessions": 3, "totalUsers": 3},
+      {"source": "claude.ai", "sessions": 2, "totalUsers": 1},
+      {"source": "perplexity.ai", "sessions": 1, "totalUsers": 1}
+    ]
+  },
+  "channels": [
+    {"sessionDefaultChannelGroup": "Organic Search", "sessions": 510, "totalUsers": 420},
+    {"sessionDefaultChannelGroup": "Direct", "sessions": 380, "totalUsers": 310},
+    {"sessionDefaultChannelGroup": "Organic Social", "sessions": 220, "totalUsers": 180},
+    {"sessionDefaultChannelGroup": "Referral", "sessions": 124, "totalUsers": 70},
+    {"sessionDefaultChannelGroup": "Email", "sessions": 6, "totalUsers": 5}
+  ],
+  "countries": {
+    "usa": {"sessions": 720},
+    "latam": {"sessions": 180},
+    "other": {"sessions": 340}
+  },
+  "devices": {
+    "desktop": 700,
+    "mobile": 510,
+    "tablet": 30,
+    "smart tv": 0,
+    "other": 0
+  },
+  "top_landing_pages": [
+    {"landingPage": "/", "sessions": 380, "activeUsers": 310, "engagementRate": 0.48},
+    {"landingPage": "/services/your-category", "sessions": 145, "activeUsers": 120, "engagementRate": 0.51},
+    {"landingPage": "/blog/buyer-guide", "sessions": 98, "activeUsers": 87, "engagementRate": 0.54}
+  ],
+  "top_sources": [
+    {"sessionSource": "google", "sessionMedium": "organic", "sessions": 488, "totalUsers": 405},
+    {"sessionSource": "(direct)", "sessionMedium": "(none)", "sessions": 380, "totalUsers": 310},
+    {"sessionSource": "linkedin.com", "sessionMedium": "referral", "sessions": 76, "totalUsers": 52}
+  ],
+  "conversion_events": [
+    {"eventName": "form_start", "eventCount": 38, "conversions": 38},
+    {"eventName": "click", "eventCount": 12, "conversions": 12}
+  ],
+  "non_conversion_events": [
+    {"eventName": "assessment_complete", "eventCount": 24, "conversions": 0}
+  ]
+}

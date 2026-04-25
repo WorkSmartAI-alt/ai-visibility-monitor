@@ -1,0 +1,17 @@
+[
+  {
+    "name": "example.com",
+    "url": "https://example.com",
+    "owner": "self"
+  },
+  {
+    "name": "client-one.com",
+    "url": "https://client-one.com",
+    "owner": "client"
+  },
+  {
+    "name": "client-two.com",
+    "url": "https://www.client-two.com",
+    "owner": "client"
+  }
+]

@@ -1,10 +1,12 @@
 # AI Visibility Monitor
 
-A small toolkit for tracking whether your website appears in AI search results (ChatGPT, Claude, Perplexity, Gemini) and Google search, and for diagnosing the technical layer underneath that determines whether AI engines can read your site at all.
+**Track whether ChatGPT, Claude, Perplexity, and Gemini are citing your site, and figure out what to do about it.**
 
-Four Python scripts. No SaaS, no dashboard service to subscribe to. You run them locally on your own credentials, the JSON output is yours, and you can pipe it into whatever dashboard or report you already use.
+Your customers are starting to use AI engines instead of Google for the questions that matter. If those engines aren't citing your site, you're invisible at exactly the moment buyers are deciding. Most "AI SEO" tools cost $500 a seat and tell you what already happened. This one runs locally on your own credentials, weekly or monthly, and tells you where to act next.
 
-Built for solo operators and small consulting practices who need real visibility data without a $500-per-seat enterprise tool.
+Four Python scripts. No SaaS, no dashboard service to subscribe to. The JSON output is yours. Pipe it into whatever dashboard or report you already use.
+
+Built for solo operators and lean consulting practices who need real visibility data without an enterprise contract.
 
 ## What's in here
 

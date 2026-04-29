@@ -1,5 +1,7 @@
 # AI Visibility Monitor
 
+<a href="https://theresanaiforthat.com/ai/ai-visibility-monitor-by-work-smart-ai/?ref=featured&v=10304149" target="_blank" rel="nofollow"><img width="300" src="https://media.theresanaiforthat.com/featured-on-taaft.png?width=600"></a>
+
 **Track whether ChatGPT, Claude, Perplexity, and Gemini are citing your site, and figure out what to do about it.**
 
 Your customers are starting to use AI engines instead of Google for the questions that matter. If those engines aren't citing your site, you're invisible at exactly the moment buyers are deciding. Most "AI SEO" tools cost $500 a seat and tell you what already happened. This one runs locally on your own credentials, weekly or monthly, and tells you where to act next.

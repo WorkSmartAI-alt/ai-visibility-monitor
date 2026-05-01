@@ -13,7 +13,7 @@ except ImportError:
     _RICH_AVAILABLE = False
 
 
-def run_interactive_setup() -> None:
+def run_interactive_setup() -> None:  # legacy shim — new code uses avm.wizard
     """
     Prompt for domain and 5 buyer queries, write queries.md and sites.json,
     then return. Caller decides whether to run the citation check after.

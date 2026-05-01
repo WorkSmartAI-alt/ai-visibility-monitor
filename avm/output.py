@@ -179,6 +179,120 @@ def pretty_print(result: dict) -> None:
         padding=(0, 0),
     ))
 
+    # RECOMMENDED TARGETS panel (only when --expand was used)
+    recommended = result.get("recommended_targets", [])
+    if recommended:
+        console.print()
+        targets_text = Text()
+        targets_text.append("\n")
+        for i, rec in enumerate(recommended, 1):
+            score = int(rec.get("winnability_score", 0) * 100)
+            targets_text.append(f"  {i}. ", style="default")
+            targets_text.append(rec["query"] + "\n", style="bold")
+            targets_text.append(f"     Winnability: {score}%  ·  ", style="dim")
+            targets_text.append(rec.get("rationale", "") + "\n", style="italic dim")
+            targets_text.append("\n")
+        console.print(Panel(
+            targets_text,
+            title="[bold green]RECOMMENDED TARGETS[/bold green]",
+            subtitle="[dim]queries to target in the next 30-60 days[/dim]",
+            box=rich_box.ROUNDED,
+            padding=(0, 0),
+        ))
+
+
+def pretty_print_trend(trend: dict) -> None:
+    """Pretty-print avm trend output. Falls back to plain text if rich is unavailable."""
+    if not _RICH_AVAILABLE:
+        _plain_print_trend(trend)
+        return
+
+    console = Console()
+    target = trend.get("target_domain", "")
+    runs = trend.get("runs", [])
+    new_competitors = trend.get("new_competitors", [])
+    dropped_competitors = trend.get("dropped_competitors", [])
+
+    console.print()
+    title = f"CITATION TRAJECTORY · {target}" if target else "CITATION TRAJECTORY"
+    trend_text = Text()
+    trend_text.append("\n")
+
+    for run in runs:
+        date = run.get("date", "")
+        cited = run.get("queries_cited", 0)
+        total = run.get("queries_total", 0)
+        delta_note = run.get("delta_note", "")
+        trend_text.append(f"  {date}  ", style="dim")
+        bar = "▏" + "█" * cited + " " * (total - cited)
+        trend_text.append(bar + "  ", style="bold green" if cited > 0 else "dim")
+        trend_text.append(f"{cited} of {total} cited", style="default")
+        if delta_note:
+            trend_text.append(f"  {delta_note}", style="dim green")
+        trend_text.append("\n")
+
+    if len(runs) >= 2:
+        first_cited = runs[0].get("queries_cited", 0)
+        last_cited = runs[-1].get("queries_cited", 0)
+        delta = last_cited - first_cited
+        total = runs[-1].get("queries_total", 1)
+        if delta > 0:
+            trajectory = f"improving (+{delta} in {len(runs)} runs)"
+            traj_style = "bold green"
+        elif delta < 0:
+            trajectory = f"declining ({delta} in {len(runs)} runs)"
+            traj_style = "bold red"
+        else:
+            trajectory = f"flat (no change over {len(runs)} runs)"
+            traj_style = "bold yellow"
+        trend_text.append(f"\n  Trajectory: ")
+        trend_text.append(trajectory + "\n", style=traj_style)
+    trend_text.append("\n")
+
+    if new_competitors:
+        trend_text.append("  New competitors appearing:\n", style="default")
+        for comp in new_competitors:
+            trend_text.append(f"    + {comp['domain']}", style="bold green")
+            trend_text.append(f"  (since run {comp['first_seen_run']})\n", style="dim")
+        trend_text.append("\n")
+
+    if dropped_competitors:
+        trend_text.append("  Competitors dropped:\n", style="default")
+        for comp in dropped_competitors:
+            trend_text.append(f"    - {comp['domain']}", style="bold red")
+            trend_text.append(f"  (last seen run {comp['last_seen_run']})\n", style="dim")
+
+    console.print(Panel(
+        trend_text,
+        title=f"[bold blue]{title}[/bold blue]",
+        box=rich_box.ROUNDED,
+        padding=(0, 0),
+    ))
+    console.print()
+
+
+def _plain_print_trend(trend: dict) -> None:
+    target = trend.get("target_domain", "")
+    runs = trend.get("runs", [])
+    print(f"\nCITATION TRAJECTORY — {target}")
+    print("=" * 60)
+    for run in runs:
+        date = run.get("date", "")
+        cited = run.get("queries_cited", 0)
+        total = run.get("queries_total", 0)
+        delta_note = run.get("delta_note", "")
+        print(f"  {date}  {cited}/{total} cited  {delta_note}")
+    new_competitors = trend.get("new_competitors", [])
+    if new_competitors:
+        print("\nNew competitors:")
+        for c in new_competitors:
+            print(f"  + {c['domain']}  (since run {c['first_seen_run']})")
+    dropped_competitors = trend.get("dropped_competitors", [])
+    if dropped_competitors:
+        print("\nDropped competitors:")
+        for c in dropped_competitors:
+            print(f"  - {c['domain']}  (last seen run {c['last_seen_run']})")
+
 
 def _plain_print(result: dict) -> None:
     """Plain text fallback when rich is not available."""

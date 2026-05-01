@@ -53,6 +53,7 @@ def main(argv: list[str] | None = None) -> int:
         help="Engines to query (comma-separated: claude,chatgpt,perplexity). Default: all with keys",
     )
     parser.add_argument("--max-searches", type=int, default=5, help="Max web_search calls per run (Claude only)")
+    parser.add_argument("--expand", action="store_true", help="Generate 15 adjacent queries and rank by winnability")
 
     subparsers = parser.add_subparsers(dest="command")
     subparsers.add_parser("setup", help="Run the setup wizard")
@@ -60,7 +61,11 @@ def main(argv: list[str] | None = None) -> int:
     subparsers.add_parser("gsc", help="Pull Google Search Console data")
     subparsers.add_parser("ga4", help="Pull GA4 data")
     subparsers.add_parser("prereqs", help="Audit robots.txt, llms.txt, sitemap")
-    subparsers.add_parser("trend", help="Citation trajectory over time (coming in v0.2.1)")
+    trend_parser = subparsers.add_parser("trend", help="Citation trajectory over time")
+    trend_parser.add_argument("--query", default=None, help="Filter to queries matching this substring")
+    trend_parser.add_argument("--since", default=None, help="Only include runs on or after this date (YYYY-MM-DD)")
+    trend_parser.add_argument("--engine", default=None, help="Filter to a specific engine (claude, chatgpt, perplexity)")
+    trend_parser.add_argument("--json", dest="output_json", action="store_true", help="Raw JSON output to stdout")
 
     args = parser.parse_args(argv)
 
@@ -97,9 +102,7 @@ def main(argv: list[str] | None = None) -> int:
         return main_cli()
 
     if args.command == "trend":
-        print("  avm trend is coming in v0.2.1.")
-        print("  It will read all data/citations-*.json files and show your citation trajectory over time.")
-        return 0
+        return _run_trend(args)
 
     return 0
 
@@ -157,6 +160,39 @@ def _run_citations(args: argparse.Namespace) -> int:
         max_searches=args.max_searches,
     )
 
+    # --expand: generate adjacent queries, run citation check on them, rank by winnability
+    if getattr(args, "expand", False):
+        from avm.expansion import generate_adjacent_queries, score_expanded_queries
+        from avm.citation import DEFAULT_MODEL as _DM
+        api_key = os.environ.get("ANTHROPIC_API_KEY", "")
+        print("\n[expand] generating adjacent queries...", file=sys.stderr)
+        try:
+            adjacent = generate_adjacent_queries(
+                base_queries=queries,
+                target_count=15,
+                model=model,
+                api_key=api_key,
+            )
+        except RuntimeError as e:
+            print(f"  [expand] skipped — {e}", file=sys.stderr)
+            adjacent = []
+
+        if adjacent:
+            print(f"[expand] running citation check on {len(adjacent)} expanded queries...", file=sys.stderr)
+            expanded_result = run_citation_check(
+                queries=adjacent,
+                target_domain=target_domain,
+                competitors=competitors,
+                model=model,
+                runs_per_query=runs,
+                engines=args.engines,
+                max_searches=args.max_searches,
+            )
+            expanded_queries = expanded_result.get("queries", [])
+            recommended = score_expanded_queries(expanded_queries, target_domain)[:5]
+            result["expanded_queries"] = expanded_queries
+            result["recommended_targets"] = recommended
+
     output_dir = Path("data")
     output_dir.mkdir(parents=True, exist_ok=True)
     output_path = output_dir / f"citations-{result['run_date_utc']}.json"
@@ -169,4 +205,28 @@ def _run_citations(args: argparse.Namespace) -> int:
         if not args.quiet:
             pretty_print(result)
         print(f"\n  JSON output written to: {output_path}")
+    return 0
+
+
+def _run_trend(args: argparse.Namespace) -> int:
+    import json as json_mod
+    from avm.trend import compute_trend
+    from avm.output import pretty_print_trend
+
+    result = compute_trend(
+        data_dir=Path("data"),
+        query_filter=getattr(args, "query", None),
+        since=getattr(args, "since", None),
+        engine_filter=getattr(args, "engine", None),
+    )
+
+    if not result.get("runs"):
+        print("No citation data found in data/. Run 'avm' first to generate data.", file=sys.stderr)
+        return 1
+
+    output_json = getattr(args, "output_json", False)
+    if output_json:
+        print(json_mod.dumps(result, indent=2))
+    else:
+        pretty_print_trend(result)
     return 0

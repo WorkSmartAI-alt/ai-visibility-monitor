@@ -10,12 +10,12 @@
   <a href="https://theresanaiforthat.com/ai/ai-visibility-monitor-by-work-smart-ai/"><img src="https://img.shields.io/badge/Featured-TAAFT-B08D3E?style=flat-square" alt="Featured on TAAFT"></a>
 </p>
 
-> **Your buyers ask ChatGPT about your category before they call you.**
-> **Want to see who it recommends instead?**
+> **Your buyers ask ChatGPT, Claude, and Perplexity about your category before they call you.**
+> **Want to see who they recommend instead?**
 
-A 4-script CLI that runs your buyer queries through Claude with web search on, records every URL it cites, and tells you whether your domain showed up. You bring 5 questions your buyers actually ask. It returns the citation map.
+A CLI tool that runs your buyer queries through Claude, ChatGPT, and Perplexity with web search on, records every URL each engine cites, and tells you whether your domain showed up. You bring 5 questions your buyers actually ask. It returns the citation map across all three engines.
 
-CLI in. JSON out. About $1 to $3 per month in API costs. No SaaS, no signup, no dashboard you'll forget about.
+CLI in. JSON out. About $0.30 per run on the default model. No SaaS, no signup, no dashboard you'll forget about.
 
 <p align="center">
   <img src="assets/pretty-output.png" alt="AI Visibility Monitor demo: pretty-printed terminal output showing 0 of 5 queries cited, top competitors per query" width="100%">
@@ -42,21 +42,38 @@ A growing share of B2B buyer research now starts inside an AI engine, not Google
 
 Most B2B sites have never measured whether they show up in that response. The few that try usually rely on enterprise SaaS tools at $29 to $499 per month with vendor-managed dashboards.
 
-This tool is the cheapest version of that check. Five queries, a few minutes of run time, $1 to $3 in API costs. Yours forever, runs on your own credentials, nothing routes through a third-party server.
+This tool is the cheapest version of that check. Five queries × three engines, a few minutes of run time, ~$0.30 in API costs per run on the default model. Yours forever, runs on your own credentials, nothing routes through a third-party server.
 
 ## Quick start
 
 ```bash
-git clone https://github.com/WorkSmartAI-alt/ai-visibility-monitor
-cd ai-visibility-monitor
-cp queries.md.example queries.md
-cp sites.json.example sites.json
-pip install -r requirements.txt
-export ANTHROPIC_API_KEY="sk-ant-..."
-python citation_check.py
+pip install ai-visibility-monitor
+avm
 ```
 
-Edit `queries.md` with your 5 buyer queries. Edit `sites.json` with your domain. The script reads both, runs each query through Claude with web search on, and writes a timestamped JSON to `data/`.
+That's it. On first run, the wizard walks you through:
+1. Installing any missing dependencies (one keystroke)
+2. Setting your Anthropic API key (saves to `.env` so you don't have to re-enter)
+3. Picking your domain and competitors
+4. Entering 5 buyer queries
+
+Then it runs the citation check across Claude, ChatGPT, and Perplexity (whichever providers you have keys for).
+
+Subsequent runs skip the wizard. Just run `avm` and the citation check executes against your saved config.
+
+### Manual config (optional)
+
+If you'd rather edit files directly:
+
+```bash
+git clone https://github.com/WorkSmartAI-alt/ai-visibility-monitor
+cd ai-visibility-monitor
+pip install -e .
+cp queries.md.example queries.md     # edit your 5 queries
+cp sites.json.example sites.json     # edit your domain + competitors
+export ANTHROPIC_API_KEY="sk-ant-..."
+avm --no-wizard
+```
 
 ## What you get
 
@@ -136,31 +153,40 @@ AI consulting Miami
 fractional CTO vs fractional Head of AI
 ```
 
-**sites.json** — your domain and competitors:
+**sites.json** — your domain and competitors as an array:
 
 ```json
-{
-  "primary_domain": "your-domain.com",
-  "competitors": [
-    "competitor-a.com",
-    "competitor-b.com",
-    "competitor-c.com"
-  ]
-}
+[
+  {
+    "name": "Your Brand",
+    "url": "https://your-domain.com",
+    "owner": "self"
+  },
+  {
+    "name": "Competitor A",
+    "url": "https://competitor-a.com",
+    "owner": "competitor"
+  }
+]
 ```
+
+The site with `"owner": "self"` is treated as your domain. All others are tracked as competitors.
 
 ## Authentication
 
-Three credential paths, used independently by the four scripts.
+The wizard will prompt for these on first run and save them to `.env`. If you prefer, you can set them as environment variables manually.
 
-| Script | Credential needed | Cost |
+| Use case | Credential needed | Cost |
 |---|---|---|
-| `citation_check.py` | `ANTHROPIC_API_KEY` env var | $1 to $3 per month typical |
-| `gsc_pull.py` | Google ADC with Search Console scope | Free |
-| `ga4_pull.py` | Google ADC with Analytics scope | Free |
-| `prereqs_sweep.py` | None (HTTP only) | Free |
+| Citation check (Claude engine) | `ANTHROPIC_API_KEY` | ~$0.30 per run on default Haiku 4.5 |
+| Citation check (ChatGPT engine) | `OPENAI_API_KEY` | ~$0.10 per run on gpt-4o-mini |
+| Citation check (Perplexity engine) | `PERPLEXITY_API_KEY` | ~$0.10 per run on Sonar (free tier available) |
+| GSC + GA4 pulls | Google ADC | Free |
+| Prereqs sweep | None (HTTP only) | Free |
 
-**Anthropic:**
+Missing keys = engine skipped with warning. The tool runs fine with just one of the three engines if that's all you have.
+
+**Anthropic** (required for default behavior):
 
 ```bash
 export ANTHROPIC_API_KEY="sk-ant-..."
@@ -168,7 +194,23 @@ export ANTHROPIC_API_KEY="sk-ant-..."
 
 Get a key at [console.anthropic.com](https://console.anthropic.com).
 
-**Google APIs:**
+**OpenAI** (optional, for ChatGPT engine):
+
+```bash
+export OPENAI_API_KEY="sk-..."
+```
+
+Get a key at [platform.openai.com/api-keys](https://platform.openai.com/api-keys).
+
+**Perplexity** (optional, for Perplexity engine):
+
+```bash
+export PERPLEXITY_API_KEY="pplx-..."
+```
+
+Get a key at [perplexity.ai/account/api](https://perplexity.ai/account/api).
+
+**Google APIs** (optional, for `avm gsc` and `avm ga4`):
 
 ```bash
 gcloud auth application-default login
@@ -176,20 +218,32 @@ gcloud auth application-default login
 
 Requires the Google Cloud SDK installed locally. See [Google ADC docs](https://cloud.google.com/docs/authentication/application-default-credentials) if you haven't set this up before.
 
+## Choosing a model
+
+Default is `claude-haiku-4-5-20251001` for cost efficiency. For most queries (specific, branded, location-tagged) the citation results match the more expensive Sonnet 4.6 within ~80% overlap.
+
+For broad or abstract category queries (e.g., "ai consultant for family offices"), citation variance is higher and you may want to opt up:
+
+```bash
+avm --model claude-sonnet-4-6
+```
+
+That costs ~10x more per run (~$3 vs $0.30). Worth it for important deep-dive analyses, overkill for routine weekly checks.
+
 ## How this compares
 
 ### Versus paid SaaS
 
-| Tool | Price | Vendor-managed | Local credentials | Open source |
+| Tool | Price (monthly) | Vendor-managed | Local credentials | Open source |
 |---|---|---|---|---|
-| **AI Visibility Monitor** | **$1 to $3/month** | No | Yes | Yes |
-| [Otterly.AI](https://otterly.ai) | $29/month | Yes | No | No |
+| **AI Visibility Monitor** | **~$0.30/run, ~$1-2/month for weekly runs** | No | Yes | Yes |
+| [Otterly.AI](https://otterly.ai) | $29 | Yes | No | No |
 | [Trakkr.ai](https://trakkr.ai) | Free beta | Yes | No | No |
 | [GenRank](https://genrank.io) | Pricing on request | Yes | No | No |
-| SEMrush AI Visibility | $99/month | Yes | No | No |
-| [Profound](https://tryprofound.com) | $499/month (Lite) | Yes | No | No |
+| SEMrush AI Visibility | $99 | Yes | No | No |
+| [Profound](https://tryprofound.com) | $499 (Lite) | Yes | No | No |
 
-The paid tools have nicer dashboards. This tool has a JSON output you can pipe into your own systems, runs on your own credentials, and the cost floor rounds to zero.
+The paid tools have nicer dashboards. This tool has a JSON output you can pipe into your own systems, runs on your own credentials, and the cost floor is roughly the price of one cup of coffee per year (weekly runs).
 
 ### Versus other open-source projects
 

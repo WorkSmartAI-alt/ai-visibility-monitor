@@ -16,7 +16,7 @@ except ImportError:
     print("ERROR: anthropic SDK not installed. Run: pip install anthropic", file=sys.stderr)
     sys.exit(2)
 
-DEFAULT_MODEL = "claude-sonnet-4-6"
+DEFAULT_MODEL = "claude-haiku-4-5-20251001"
 DEFAULT_RUNS = 2
 DEFAULT_MAX_SEARCHES = 5
 

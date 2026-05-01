@@ -92,7 +92,7 @@ def run_query(
         try:
             single = _run_single(client, model, query, max_searches)
         except Exception as e:
-            print(f"    [claude] run {r+1}/{runs} FAILED: {e}")
+            print(f"    [claude] run {r+1}/{runs} FAILED: {e}", file=__import__('sys').stderr)
             continue
         elapsed = int((time.perf_counter() - t0) * 1000)
         pos = _position_of(single["citations"], target_domain)
@@ -103,7 +103,7 @@ def run_query(
                 seen_urls.add(c["url"])
                 union.append(c)
         status = f"cited at #{pos}" if pos else f"not cited ({len(single['citations'])} URLs)"
-        print(f"    [claude] run {r+1}/{runs}: {status} ({elapsed}ms)")
+        print(f"    [claude] run {r+1}/{runs}: {status} ({elapsed}ms)", file=__import__('sys').stderr)
         raw_runs.append({"citations": single["citations"], "stop_reason": single["stop_reason"]})
 
     cited = len(positions) > 0

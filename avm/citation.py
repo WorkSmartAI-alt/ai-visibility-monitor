@@ -158,13 +158,13 @@ def run_citation_check(
     active_engine_names = [e for e, _, _ in available]
     multi = len(available) > 1
 
-    print(f"[citation_check] target: {target_domain}")
-    print(f"[citation_check] engines: {', '.join(active_engine_names)}")
-    print(f"[citation_check] claude model: {engine_models.get('claude', model)} | runs: {runs_per_query}\n")
+    print(f"[citation_check] target: {target_domain}", file=sys.stderr)
+    print(f"[citation_check] engines: {', '.join(active_engine_names)}", file=sys.stderr)
+    print(f"[citation_check] claude model: {engine_models.get('claude', model)} | runs: {runs_per_query}\n", file=sys.stderr)
 
     aggregated: list[dict] = []
     for i, query in enumerate(queries, 1):
-        print(f"[{i}/{len(queries)}] {query}")
+        print(f"[{i}/{len(queries)}] {query}", file=sys.stderr)
         results_per_engine: dict[str, dict] = {}
 
         for eng_name, eng_key, _ in available:
@@ -180,7 +180,7 @@ def run_citation_check(
             next(iter(results_per_engine), None)
         )
         if primary_name is None:
-            print(f"  [warning] all engines failed for query {i}", file=sys.stderr)
+            print(f"  [warning] all engines failed for query {i+1}", file=sys.stderr)
             continue
 
         primary = results_per_engine[primary_name]

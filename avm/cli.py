@@ -164,8 +164,9 @@ def _run_citations(args: argparse.Namespace) -> int:
 
     if args.output_json:
         print(json_mod.dumps(result, indent=2))
-    elif not args.quiet:
-        pretty_print(result)
-
-    print(f"\n  JSON output written to: {output_path}")
+        print(f"\n  JSON output written to: {output_path}", file=sys.stderr)
+    else:
+        if not args.quiet:
+            pretty_print(result)
+        print(f"\n  JSON output written to: {output_path}")
     return 0

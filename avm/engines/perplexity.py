@@ -85,7 +85,7 @@ def run_query(
             content_text = response.choices[0].message.content or ""
             cites = _extract_citations(response, content_text)
         except Exception as e:
-            print(f"    [perplexity] run {r+1}/{runs} FAILED: {e}")
+            print(f"    [perplexity] run {r+1}/{runs} FAILED: {e}", file=__import__('sys').stderr)
             continue
 
         elapsed = int((time.perf_counter() - t0) * 1000)
@@ -97,7 +97,7 @@ def run_query(
                 seen_urls.add(c["url"])
                 union.append(c)
         status = f"cited at #{pos}" if pos else f"not cited ({len(cites)} URLs)"
-        print(f"    [perplexity] run {r+1}/{runs}: {status} ({elapsed}ms)")
+        print(f"    [perplexity] run {r+1}/{runs}: {status} ({elapsed}ms)", file=__import__('sys').stderr)
         raw_runs.append({"citations": cites})
 
     import statistics

@@ -128,6 +128,19 @@ def pretty_print(result: dict) -> None:
         else:
             breakdown_text.append("✗", style="bold red")
         breakdown_text.append(f"  ·  Citation rate: {cite_rate}%\n", style="default")
+
+        # Per-engine breakdown (multi-engine mode)
+        per_engine = q.get("results_per_engine")
+        if per_engine:
+            engine_parts: list[str] = []
+            from avm.engines import ENGINE_REGISTRY
+            for eng_name, eng_data in per_engine.items():
+                label = ENGINE_REGISTRY.get(eng_name, {}).get("label", eng_name)
+                tick = "cited" if eng_data.get("cited") else "not cited"
+                engine_parts.append(f"{label}: {tick}")
+            breakdown_text.append("     Engines: ", style="default")
+            breakdown_text.append(" / ".join(engine_parts) + "\n", style="dim")
+
         comps = _top_competitors_for_query(q, target)
         if comps:
             breakdown_text.append("     Top competitors:\n", style="default")
@@ -151,9 +164,16 @@ def _plain_print(result: dict) -> None:
     summary = result.get("summary", {})
     queries_cited = summary.get("queries_cited", 0)
     queries_total = summary.get("queries_total", 0)
+    engines = result.get("engines", [])
     print(f"\nAI VISIBILITY MONITOR - {target} - {run_date}")
+    if engines:
+        print(f"Engines: {', '.join(engines)}")
     print("=" * 60)
     print(f"Cited in {queries_cited} of {queries_total} queries.")
     for q in result.get("queries", []):
         tag = f"YES #{q['position_mode']}" if q.get("cited") else "NO"
         print(f"  [{tag:>6}]  {q['query']}")
+        per_engine = q.get("results_per_engine")
+        if per_engine:
+            parts = [f"{eng}: {'cited' if d.get('cited') else 'not cited'}" for eng, d in per_engine.items()]
+            print(f"           {' / '.join(parts)}")

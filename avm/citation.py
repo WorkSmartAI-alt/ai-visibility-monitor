@@ -1,29 +1,14 @@
 from __future__ import annotations
 
-import argparse
-import json
 import os
-import statistics
 import sys
 import time
 from datetime import datetime, timezone
-from pathlib import Path
 from urllib.parse import urlparse
-
-try:
-    import anthropic
-except ImportError:
-    print("ERROR: anthropic SDK not installed. Run: pip install anthropic", file=sys.stderr)
-    sys.exit(2)
 
 DEFAULT_MODEL = "claude-haiku-4-5-20251001"
 DEFAULT_RUNS = 2
 DEFAULT_MAX_SEARCHES = 5
-
-PROMPT_TEMPLATE = (
-    "I'm researching this as a buyer. Give me a concise answer and cite the "
-    "sources you used.\n\nQuery: {q}"
-)
 
 
 def domain_of(url: str) -> str:
@@ -34,59 +19,17 @@ def domain_of(url: str) -> str:
         return ""
 
 
-def _run_single_query(client: anthropic.Anthropic, model: str, query: str, max_searches: int) -> dict:
-    """Call Claude with web_search enabled. Returns {citations, answer_text, ...}."""
-    tools = [{"type": "web_search_20250305", "name": "web_search", "max_uses": max_searches}]
-    prompt = PROMPT_TEMPLATE.format(q=query)
-
-    resp = client.messages.create(
-        model=model,
-        max_tokens=1024,
-        tools=tools,
-        messages=[{"role": "user", "content": prompt}],
-    )
-
-    citations: list[dict] = []
-    seen_urls: set[str] = set()
-    answer_parts: list[str] = []
-
-    for block in resp.content:
-        btype = getattr(block, "type", None)
-        if btype == "text":
-            text = getattr(block, "text", "") or ""
-            answer_parts.append(text)
-            block_citations = getattr(block, "citations", None) or []
-            for c in block_citations:
-                ctype = getattr(c, "type", None)
-                if ctype in ("web_search_result_location", "url_citation"):
-                    url = getattr(c, "url", None) or ""
-                    title = getattr(c, "title", None) or ""
-                    if url and url not in seen_urls:
-                        seen_urls.add(url)
-                        citations.append({"url": url, "title": title, "domain": domain_of(url)})
-        elif btype == "web_search_tool_result":
-            content = getattr(block, "content", None) or []
-            for item in content:
-                url = getattr(item, "url", None) or ""
-                title = getattr(item, "title", None) or ""
-                if url and url not in seen_urls:
-                    seen_urls.add(url)
-                    citations.append({
-                        "url": url,
-                        "title": title,
-                        "domain": domain_of(url),
-                        "from": "search_result",
-                    })
-
+# ── kept for backward-compat with any code importing from avm.citation directly ──
+def _run_single_query(client, model: str, query: str, max_searches: int) -> dict:
+    """Direct Claude call. Imported by tests and the head-to-head comparison script."""
+    from avm.engines.claude import _run_single
+    result = _run_single(client, model, query, max_searches)
     return {
         "query": query,
-        "citations": citations,
-        "answer_text": "".join(answer_parts).strip(),
-        "stop_reason": getattr(resp, "stop_reason", None),
-        "usage": {
-            "input_tokens": getattr(getattr(resp, "usage", None), "input_tokens", None),
-            "output_tokens": getattr(getattr(resp, "usage", None), "output_tokens", None),
-        },
+        "citations": result["citations"],
+        "answer_text": "",
+        "stop_reason": result["stop_reason"],
+        "usage": {},
     }
 
 
@@ -98,11 +41,10 @@ def _position_of_domain(citations: list[dict], target_domain: str) -> int | None
 
 
 def _aggregate(query: str, runs: list[dict], target_domain: str) -> dict:
-    """Union citations across runs, capture position stats for target domain."""
+    import statistics
     union: list[dict] = []
     seen: set[str] = set()
     positions: list[int] = []
-
     for run in runs:
         pos = _position_of_domain(run["citations"], target_domain)
         if pos is not None:
@@ -111,7 +53,6 @@ def _aggregate(query: str, runs: list[dict], target_domain: str) -> dict:
             if c["url"] not in seen:
                 seen.add(c["url"])
                 union.append(c)
-
     cited = len(positions) > 0
     return {
         "query": query,
@@ -126,6 +67,61 @@ def _aggregate(query: str, runs: list[dict], target_domain: str) -> dict:
     }
 
 
+def _parse_engines(engines_arg: str | list[str] | None) -> list[str]:
+    from avm.engines import ENGINE_ORDER
+    if engines_arg is None:
+        return list(ENGINE_ORDER)
+    if isinstance(engines_arg, str):
+        return [e.strip().lower() for e in engines_arg.split(",") if e.strip()]
+    return [e.strip().lower() for e in engines_arg]
+
+
+def _resolve_available(
+    engine_list: list[str],
+    claude_api_key: str | None,
+) -> list[tuple[str, str, str]]:
+    """
+    Return list of (engine_name, api_key, model) for engines that have keys.
+    Warns and skips engines without keys.
+    """
+    from avm.engines import ENGINE_REGISTRY
+    available: list[tuple[str, str, str]] = []
+    for eng in engine_list:
+        if eng not in ENGINE_REGISTRY:
+            print(f"  [warning] Unknown engine '{eng}', skipping.", file=sys.stderr)
+            continue
+        reg = ENGINE_REGISTRY[eng]
+        key = claude_api_key if eng == "claude" else None
+        key = key or os.environ.get(reg["api_key_env"], "")
+        if not key:
+            print(f"  [warning] No {reg['api_key_env']} set — skipping {reg['label']}.")
+            continue
+        available.append((eng, key, reg["default_model"]))
+    return available
+
+
+def _call_engine(eng_name: str, query: str, target_domain: str, key: str, model: str,
+                 runs: int, max_searches: int) -> dict | None:
+    import importlib
+    from avm.engines import ENGINE_REGISTRY
+    try:
+        mod = importlib.import_module(ENGINE_REGISTRY[eng_name]["module"])
+        return mod.run_query(
+            query=query,
+            target_domain=target_domain,
+            model=model,
+            api_key=key,
+            runs=runs,
+            max_searches=max_searches,
+        )
+    except RuntimeError as e:
+        print(f"  [warning] {eng_name}: {e}", file=sys.stderr)
+        return None
+    except Exception as e:
+        print(f"  [warning] {eng_name} failed: {e}", file=sys.stderr)
+        return None
+
+
 def run_citation_check(
     queries: list[str],
     target_domain: str,
@@ -133,136 +129,103 @@ def run_citation_check(
     model: str = DEFAULT_MODEL,
     runs_per_query: int = DEFAULT_RUNS,
     api_key: str | None = None,
+    engines: str | list[str] | None = None,
+    max_searches: int = DEFAULT_MAX_SEARCHES,
 ) -> dict:
     """
-    Run a citation check for the given queries against the target domain.
+    Run a citation check across one or more AI engines.
 
-    Returns the citation result dict (same shape as v0.1.0 JSON output):
-    {
-        "run_date_utc": "...",
-        "generator": "citation_check.py",
-        "version": "1.0",
-        "target_domain": "...",
-        "model": "...",
-        "runs_per_query": int,
-        "summary": {...},
-        "queries": [...],
-    }
+    When engines='claude' or only Claude is available, the output shape is
+    identical to v0.1.0 (backward compatible). When multiple engines run,
+    each query additionally contains a 'results_per_engine' dict.
     """
-    effective_key = api_key or os.environ.get("ANTHROPIC_API_KEY")
-    if not effective_key:
-        print("ERROR: ANTHROPIC_API_KEY not set in environment.", file=sys.stderr)
-        print("Set it with: export ANTHROPIC_API_KEY='sk-ant-...'", file=sys.stderr)
-        sys.exit(2)
+    effective_claude_key = api_key or os.environ.get("ANTHROPIC_API_KEY", "")
 
-    client = anthropic.Anthropic(api_key=effective_key)
+    engine_list = _parse_engines(engines)
+    available = _resolve_available(engine_list, effective_claude_key)
+
+    if not available:
+        print("ERROR: No engine API keys found. Set ANTHROPIC_API_KEY at minimum.", file=sys.stderr)
+        sys.exit(1)
+
+    # Use the caller-supplied model for Claude, registry default for others
+    engine_models: dict[str, str] = {}
+    from avm.engines import ENGINE_REGISTRY
+    for eng, _key, default_model in available:
+        engine_models[eng] = model if eng == "claude" else default_model
+
     run_date = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    active_engine_names = [e for e, _, _ in available]
+    multi = len(available) > 1
 
-    print(f"[citation_check] target domain: {target_domain}")
-    print(f"[citation_check] model: {model} | runs per query: {runs_per_query} | max searches: {DEFAULT_MAX_SEARCHES}\n")
+    print(f"[citation_check] target: {target_domain}")
+    print(f"[citation_check] engines: {', '.join(active_engine_names)}")
+    print(f"[citation_check] claude model: {engine_models.get('claude', model)} | runs: {runs_per_query}\n")
 
     aggregated: list[dict] = []
     for i, query in enumerate(queries, 1):
         print(f"[{i}/{len(queries)}] {query}")
-        runs = []
-        for r in range(runs_per_query):
-            t0 = time.perf_counter()
-            try:
-                single = _run_single_query(client, model, query, DEFAULT_MAX_SEARCHES)
-            except anthropic.APIError as e:
-                print(f"    run {r+1}/{runs_per_query} FAILED: {e}", file=sys.stderr)
-                continue
-            runs.append(single)
-            pos = _position_of_domain(single["citations"], target_domain)
-            elapsed = int((time.perf_counter() - t0) * 1000)
-            status = f"cited at #{pos}" if pos else f"not cited ({len(single['citations'])} URLs seen)"
-            print(f"    run {r+1}/{runs_per_query}: {status} ({elapsed}ms)")
-        agg = _aggregate(query, runs, target_domain)
-        aggregated.append(agg)
+        results_per_engine: dict[str, dict] = {}
 
+        for eng_name, eng_key, _ in available:
+            eng_result = _call_engine(
+                eng_name, query, target_domain, eng_key,
+                engine_models[eng_name], runs_per_query, max_searches,
+            )
+            if eng_result is not None:
+                results_per_engine[eng_name] = eng_result
+
+        # Primary engine for backward-compat fields: Claude if available, else first
+        primary_name = "claude" if "claude" in results_per_engine else (
+            next(iter(results_per_engine), None)
+        )
+        if primary_name is None:
+            print(f"  [warning] all engines failed for query {i}", file=sys.stderr)
+            continue
+
+        primary = results_per_engine[primary_name]
+        query_result: dict = {
+            "query": query,
+            "runs": primary["runs"],
+            "cited": primary["cited"],
+            "citation_rate": primary["citation_rate"],
+            "position_mode": primary.get("position_mode"),
+            "position_min": primary.get("position_min"),
+            "position_max": primary.get("position_max"),
+            "citations_union": primary["citations_union"],
+            "raw_runs": primary["raw_runs"],
+        }
+        if multi:
+            query_result["results_per_engine"] = {
+                eng: {
+                    "cited": r["cited"],
+                    "citation_rate": r["citation_rate"],
+                    "citations_union": r["citations_union"],
+                }
+                for eng, r in results_per_engine.items()
+            }
+        aggregated.append(query_result)
+
+    total = len(aggregated)
+    cited_count = sum(1 for a in aggregated if a["cited"])
     return {
         "run_date_utc": run_date,
         "generator": "citation_check.py",
         "version": "1.0",
         "target_domain": target_domain,
-        "model": model,
+        "model": engine_models.get("claude", model),
+        "engines": active_engine_names,
         "runs_per_query": runs_per_query,
         "summary": {
-            "queries_total": len(queries),
-            "queries_cited": sum(1 for a in aggregated if a["cited"]),
-            "queries_uncited": sum(1 for a in aggregated if not a["cited"]),
+            "queries_total": total,
+            "queries_cited": cited_count,
+            "queries_uncited": total - cited_count,
         },
         "queries": aggregated,
     }
 
 
 def main_cli() -> int:
-    from avm.config import load_queries, load_sites
-    from avm.output import write_json, pretty_print
-
-    parser = argparse.ArgumentParser(description="AI Visibility Monitor citation check")
-    parser.add_argument("--domain", default=None, help="Target domain (overrides sites.json)")
-    parser.add_argument("--queries", default="queries.md", help="Path to queries file")
-    parser.add_argument("--runs", type=int, default=DEFAULT_RUNS, help="Runs per query")
-    parser.add_argument("--model", default=DEFAULT_MODEL, help="Claude model to use")
-    parser.add_argument("--max-searches", type=int, default=DEFAULT_MAX_SEARCHES, help="Max web_search uses per query")
-    parser.add_argument("--dry-run", action="store_true", help="Parse queries only, no API call")
-    parser.add_argument("--json", dest="output_json", action="store_true", help="Raw JSON output to stdout")
-    parser.add_argument("--quiet", action="store_true", help="Suppress all output except file write confirmation")
-    parser.add_argument("--interactive", action="store_true", help="Set up queries.md interactively")
-    parser.add_argument("--no-run", action="store_true", help="With --interactive, set up only")
-    args = parser.parse_args()
-
-    if args.interactive:
-        from avm.interactive import run_interactive_setup
-        run_interactive_setup()
-        if args.no_run:
-            return 0
-
-    queries_path = Path(args.queries)
-    if not queries_path.exists():
-        print(f"ERROR: {queries_path} not found. Run --interactive to set up.", file=sys.stderr)
-        return 1
-
-    queries = load_queries(queries_path)
-    if not queries:
-        print(f"ERROR: no queries found in {queries_path}", file=sys.stderr)
-        return 1
-
-    print(f"[citation_check] loaded {len(queries)} queries from {queries_path.name}")
-    for i, q in enumerate(queries, 1):
-        print(f"  {i}. {q}")
-
-    if args.dry_run:
-        print("\n[dry-run] exiting without calling API.")
-        return 0
-
-    sites_path = Path("sites.json")
-    if sites_path.exists():
-        sites = load_sites(sites_path)
-        target_domain = args.domain or sites["primary_domain"]
-        competitors = sites.get("competitors", [])
-    else:
-        target_domain = args.domain or "example.com"
-        competitors = []
-
-    result = run_citation_check(
-        queries=queries,
-        target_domain=target_domain,
-        competitors=competitors,
-        model=args.model,
-        runs_per_query=args.runs,
-    )
-
-    output_dir = Path("data")
-    output_dir.mkdir(parents=True, exist_ok=True)
-    output_path = output_dir / f"citations-{result['run_date_utc']}.json"
-    write_json(result, output_path)
-
-    if args.output_json:
-        print(json.dumps(result, indent=2))
-    elif not args.quiet:
-        pretty_print(result)
-
-    print(f"\n  JSON output written to: {output_path}")
-    return 0
+    """Legacy entry point — delegates to avm.cli.main() for full feature support."""
+    from avm.cli import main
+    return main()

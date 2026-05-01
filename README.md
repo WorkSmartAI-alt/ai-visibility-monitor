@@ -13,7 +13,7 @@
 > **Your buyers ask ChatGPT, Claude, and Perplexity about your category before they call you.**
 > **Want to see who they recommend instead?**
 
-A CLI tool that runs your buyer queries through Claude, ChatGPT, and Perplexity with web search on, records every URL each engine cites, and tells you whether your domain showed up. You bring 5 questions your buyers actually ask. It returns the citation map across all three engines.
+A CLI tool that runs your buyer queries through Claude, ChatGPT, and Perplexity with web search on, records every URL each engine cites, and tells you whether your domain showed up. You bring 5 questions your buyers actually ask. It returns the citation map across all three engines — plus which queries you can realistically break into next.
 
 CLI in. JSON out. About $0.30 per run on the default model. No SaaS, no signup, no dashboard you'll forget about.
 
@@ -26,6 +26,9 @@ CLI in. JSON out. About $0.30 per run on the default model. No SaaS, no signup, 
 - [Why this exists](#why-this-exists)
 - [Quick start](#quick-start)
 - [What you get](#what-you-get)
+- [Adjacent query discovery (--expand)](#adjacent-query-discovery---expand)
+- [Source-surface categorization](#source-surface-categorization)
+- [Citation trajectory (avm trend)](#citation-trajectory-avm-trend)
 - [How it works](#how-it-works)
 - [Configuration](#configuration)
 - [Authentication](#authentication)
@@ -118,6 +121,91 @@ Each query runs N times (default 2) so the data is averaged across runs, not a s
 Pipe the JSON into a spreadsheet, a dashboard, a Slack notification, whatever you already use. The JSON is the deliverable.
 
 See [`sample-data/citations-example.json`](sample-data/citations-example.json) for a real anonymized run.
+
+## Adjacent query discovery (`--expand`)
+
+Your 5 base queries are probably the most obvious ones. Your competitors have spent months building authority on them.
+
+Run `avm --expand` and the tool generates 15 adjacent queries by varying specificity, intent, and vocabulary. It runs a full citation check on all 20, then ranks the expanded queries by **winnability** — citation density, surface softness, your partial visibility.
+
+```bash
+avm --expand
+```
+
+Output adds a **RECOMMENDED TARGETS** panel showing the 5 expanded queries you can realistically break into in 30-60 days, with per-query rationale:
+
+```
+  1. fractional ai lead for smb
+     Winnability: 50%  ·  soft surface mix (forums/blogs dominate); already cited by Perplexity
+
+  2. best ai tools for wealth advisors
+     Winnability: 7%  ·  soft surface mix (forums/blogs dominate)
+```
+
+The JSON output adds `expanded_queries` (same schema as `queries`) and `recommended_targets` (query + winnability_score + rationale).
+
+Cost: ~$0.90 per `--expand` run on the default Haiku model (15 extra queries × 3 engines × 2 runs = 90 calls).
+
+## Source-surface categorization
+
+Every cited URL is now automatically categorized by surface type: press, blog, forum, wikipedia, official docs, GitHub, LinkedIn, YouTube, job board, or uncategorized.
+
+The per-query breakdown shows the surface mix and a suggested action:
+
+```
+Surface mix: 40% press · 30% blog · 20% forum · 10% uncategorized
+Action: pitch HARO/Qwoted, target press placements
+```
+
+**Action heuristics:**
+- press > 50% → pitch HARO/Qwoted, target press placements
+- forum > 40% → build authority in relevant subreddits and Q&A
+- blog > 40% → guest post or invest in your own blog
+- official_docs > 30% → hard surface to displace, deprioritize
+- uncategorized > 50% → long-tail / niche market, your own content can win
+- balanced mix → all-channel approach
+
+**Override with `surfaces.json`** in your working directory to add your own categories:
+
+```json
+{
+  "press": ["constructiondive.com"],
+  "industry_news": ["wealthmanagement.com", "finews.com"]
+}
+```
+
+User-defined categories merge with the defaults. Your entries take priority.
+
+## Citation trajectory (`avm trend`)
+
+Run `avm trend` to see your citation rate over time across all historical runs in `data/`. No new API calls — pure historical analysis.
+
+```bash
+avm trend                         # Full trajectory across all runs
+avm trend --query "fractional"    # Filter to queries matching a substring
+avm trend --since 2026-01-01      # Runs on or after a specific date
+avm trend --engine perplexity     # Filter to one engine
+avm trend --json                  # Raw JSON output
+```
+
+Output:
+
+```
+╭──── CITATION TRAJECTORY · work-smart.ai ──────────────────╮
+│                                                           │
+│  2026-04-25  ▏      0 of 5 cited                          │
+│  2026-05-01  ▏█     1 of 5 cited  ↑ +1                    │
+│  2026-05-08  ▏██    2 of 5 cited  ↑ +1                    │
+│                                                           │
+│  Trajectory: improving (+2 in 3 runs)                    │
+│                                                           │
+│  New competitors appearing:                               │
+│    + headofai.ai  (since run 2)                           │
+│                                                           │
+╰───────────────────────────────────────────────────────────╯
+```
+
+Each run of `avm` writes to `data/citations-{date}.json`. The trend command reads all those files chronologically. Run weekly, you'll see your trajectory build up automatically.
 
 ## How it works
 
@@ -261,14 +349,25 @@ GEO/AEO Tracker is the deployable dashboard. AI Product Bench is the consistency
 
 Public, structured, every commitment visible.
 
-### v0.1.1 (this week)
+### v0.1.1 (shipped)
 
-- 🟡 [#1 Pretty-print citation_check output (rich library)](https://github.com/WorkSmartAI-alt/ai-visibility-monitor/issues/1)
-- 🟡 [#2 Add `--interactive` flag for first-time setup](https://github.com/WorkSmartAI-alt/ai-visibility-monitor/issues/2)
+- 🟢 [#1 Pretty-print citation_check output (rich library)](https://github.com/WorkSmartAI-alt/ai-visibility-monitor/issues/1)
+- 🟢 [#2 Add `--interactive` flag for first-time setup](https://github.com/WorkSmartAI-alt/ai-visibility-monitor/issues/2)
 
-### v0.2.0 (next week)
+### v0.2.0 (shipped)
 
-- ⚪ [#3 Multi-model rotation: Claude + ChatGPT + Perplexity](https://github.com/WorkSmartAI-alt/ai-visibility-monitor/issues/3)
+- 🟢 [#3 Multi-model rotation: Claude + ChatGPT + Perplexity](https://github.com/WorkSmartAI-alt/ai-visibility-monitor/issues/3)
+- 🟢 [#11 Single `avm` command with subcommands](https://github.com/WorkSmartAI-alt/ai-visibility-monitor/issues/11)
+- 🟢 [#12 Auto-install missing dependencies](https://github.com/WorkSmartAI-alt/ai-visibility-monitor/issues/12)
+- 🟢 [#13 First-run setup wizard](https://github.com/WorkSmartAI-alt/ai-visibility-monitor/issues/13)
+- 🟢 [#14 Switch default model to Haiku 4.5 (~10x cheaper)](https://github.com/WorkSmartAI-alt/ai-visibility-monitor/issues/14)
+- 🟢 [#15 Progress output to stderr for clean --json pipe](https://github.com/WorkSmartAI-alt/ai-visibility-monitor/issues/15)
+
+### v0.2.1 (shipped)
+
+- 🟢 [#16 Adjacent query discovery (`--expand`)](https://github.com/WorkSmartAI-alt/ai-visibility-monitor/issues/16)
+- 🟢 [#17 Source-surface categorization](https://github.com/WorkSmartAI-alt/ai-visibility-monitor/issues/17)
+- 🟢 [#18 `avm trend` citation trajectory command](https://github.com/WorkSmartAI-alt/ai-visibility-monitor/issues/18)
 
 ### v0.2.x backlog
 
@@ -281,7 +380,7 @@ Public, structured, every commitment visible.
 
 🟢 shipped · 🟡 in progress · ⚪ planned
 
-Full milestone view: [v0.1.1](https://github.com/WorkSmartAI-alt/ai-visibility-monitor/milestone/1) · [v0.2.0](https://github.com/WorkSmartAI-alt/ai-visibility-monitor/milestone/2)
+Full milestone view: [v0.1.1](https://github.com/WorkSmartAI-alt/ai-visibility-monitor/milestone/1) · [v0.2.0](https://github.com/WorkSmartAI-alt/ai-visibility-monitor/milestone/2) · [v0.2.1](https://github.com/WorkSmartAI-alt/ai-visibility-monitor/milestone/3)
 
 ## Contributing
 

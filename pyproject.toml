@@ -1,6 +1,6 @@
 [project]
 name = "ai-visibility-monitor"
-version = "0.2.0"
+version = "0.2.1"
 description = "Find out which sites ChatGPT and Claude cite for your buyer queries"
 readme = "README.md"
 license = {file = "LICENSE"}

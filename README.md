@@ -18,7 +18,7 @@ A 4-script CLI that runs your buyer queries through Claude with web search on, r
 CLI in. JSON out. About $1 to $3 per month in API costs. No SaaS, no signup, no dashboard you'll forget about.
 
 <p align="center">
-  <img src="assets/pretty-output.gif" alt="AI Visibility Monitor demo: pretty-printed terminal output showing 0 of 5 queries cited, top competitors per query" width="100%">
+  <img src="assets/pretty-output.png" alt="AI Visibility Monitor demo: pretty-printed terminal output showing 0 of 5 queries cited, top competitors per query" width="100%">
 </p>
 
 ## Table of contents

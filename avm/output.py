@@ -145,6 +145,7 @@ def pretty_print(result: dict) -> None:
 
 def _plain_print(result: dict) -> None:
     """Plain text fallback when rich is not available."""
+    print("\nNote: install 'rich' for the polished output (pip install rich)")
     target = result.get("target_domain", "")
     run_date = result.get("run_date_utc", "")
     summary = result.get("summary", {})

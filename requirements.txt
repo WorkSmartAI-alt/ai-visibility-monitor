@@ -1,0 +1,5 @@
+anthropic>=0.40.0
+google-api-python-client>=2.100.0
+google-auth>=2.30.0
+google-analytics-data>=0.18.0
+rich>=13.0

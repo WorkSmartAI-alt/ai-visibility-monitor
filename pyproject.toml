@@ -1,0 +1,40 @@
+[project]
+name = "ai-visibility-monitor"
+version = "0.1.1"
+description = "Find out which sites ChatGPT and Claude cite for your buyer queries"
+readme = "README.md"
+license = {file = "LICENSE"}
+requires-python = ">=3.10"
+authors = [{name = "Ignacio Lopez", email = "ignacio@work-smart.ai"}]
+keywords = ["ai", "seo", "geo", "aeo", "ai-search", "claude", "citation-tracking"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+dependencies = [
+    "anthropic>=0.40.0",
+    "google-api-python-client>=2.100.0",
+    "google-auth>=2.30.0",
+    "google-analytics-data>=0.18.0",
+    "rich>=13.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/WorkSmartAI-alt/ai-visibility-monitor"
+Issues = "https://github.com/WorkSmartAI-alt/ai-visibility-monitor/issues"
+
+[project.scripts]
+avm-citation-check = "avm.citation:main_cli"
+avm-gsc-pull = "avm.gsc:main_cli"
+avm-ga4-pull = "avm.ga4:main_cli"
+avm-prereqs-sweep = "avm.prereqs:main_cli"
+
+[tool.setuptools.packages.find]
+include = ["avm*"]
+
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"

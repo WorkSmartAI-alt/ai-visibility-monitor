@@ -1,6 +1,6 @@
 [project]
 name = "ai-visibility-monitor"
-version = "0.1.1"
+version = "0.2.0"
 description = "Find out which sites ChatGPT and Claude cite for your buyer queries"
 readme = "README.md"
 license = {file = "LICENSE"}
@@ -20,6 +20,7 @@ dependencies = [
     "google-auth>=2.30.0",
     "google-analytics-data>=0.18.0",
     "rich>=13.0",
+    "openai>=1.0.0",
 ]
 
 [project.urls]
@@ -27,6 +28,7 @@ Homepage = "https://github.com/WorkSmartAI-alt/ai-visibility-monitor"
 Issues = "https://github.com/WorkSmartAI-alt/ai-visibility-monitor/issues"
 
 [project.scripts]
+avm = "avm.cli:main"
 avm-citation-check = "avm.citation:main_cli"
 avm-gsc-pull = "avm.gsc:main_cli"
 avm-ga4-pull = "avm.ga4:main_cli"

@@ -190,6 +190,17 @@ def run_citation_check(
         best_rate = max((r["citation_rate"] for r in results_per_engine.values()), default=0.0)
         cited_by = [eng for eng, r in results_per_engine.items() if r["cited"]]
 
+        # Surface distribution across all cited URLs (all engines combined)
+        from avm.surfaces import surface_distribution, suggested_action
+        all_urls: list[dict] = list(primary["citations_union"])
+        if multi:
+            for r in results_per_engine.values():
+                for c in r.get("citations_union", []):
+                    if not any(x["url"] == c["url"] for x in all_urls):
+                        all_urls.append(c)
+        surf_dist = surface_distribution(all_urls)
+        surf_action = suggested_action(surf_dist)
+
         query_result: dict = {
             "query": query,
             "runs": primary["runs"],
@@ -200,6 +211,8 @@ def run_citation_check(
             "position_min": primary.get("position_min"),
             "position_max": primary.get("position_max"),
             "citations_union": primary["citations_union"],
+            "surface_distribution": surf_dist,
+            "suggested_action": surf_action,
             "raw_runs": primary["raw_runs"],
         }
         if multi:

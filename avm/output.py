@@ -150,6 +150,21 @@ def pretty_print(result: dict) -> None:
             breakdown_text.append("     Engines: ", style="default")
             breakdown_text.append(" / ".join(engine_parts) + "\n", style="dim")
 
+        # Surface distribution
+        surf_dist = q.get("surface_distribution", {})
+        if surf_dist:
+            total_cites = sum(surf_dist.values())
+            parts = []
+            for cat, cnt in sorted(surf_dist.items(), key=lambda x: -x[1]):
+                pct = int(cnt / total_cites * 100) if total_cites else 0
+                parts.append(f"{pct}% {cat.replace('_', ' ')}")
+            breakdown_text.append("     Surface mix: ", style="default")
+            breakdown_text.append(" · ".join(parts) + "\n", style="dim")
+            action = q.get("suggested_action", "")
+            if action:
+                breakdown_text.append("     Action: ", style="default")
+                breakdown_text.append(action + "\n", style="italic dim")
+
         comps = _top_competitors_for_query(q, target)
         if comps:
             breakdown_text.append("     Top competitors:\n", style="default")

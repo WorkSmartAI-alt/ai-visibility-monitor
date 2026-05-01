@@ -1,164 +1,252 @@
-# AI Visibility Monitor
+<p align="center">
+  <img src="assets/banner.svg" alt="AI Visibility Monitor by Work-Smart.ai" width="100%">
+</p>
 
-<a href="https://theresanaiforthat.com/ai/ai-visibility-monitor-by-work-smart-ai/?ref=featured&v=10304149" target="_blank" rel="nofollow"><img width="300" src="https://media.theresanaiforthat.com/featured-on-taaft.png?width=600"></a>
+<p align="center">
+  <a href="LICENSE"><img src="https://img.shields.io/github/license/WorkSmartAI-alt/ai-visibility-monitor?color=B08D3E&style=flat-square" alt="MIT License"></a>
+  <a href="https://www.python.org/downloads/"><img src="https://img.shields.io/badge/python-3.10%2B-blue?style=flat-square" alt="Python 3.10+"></a>
+  <a href="https://github.com/WorkSmartAI-alt/ai-visibility-monitor/stargazers"><img src="https://img.shields.io/github/stars/WorkSmartAI-alt/ai-visibility-monitor?style=flat-square" alt="GitHub stars"></a>
+  <a href="https://github.com/WorkSmartAI-alt/ai-visibility-monitor/issues"><img src="https://img.shields.io/github/issues/WorkSmartAI-alt/ai-visibility-monitor?style=flat-square" alt="Open issues"></a>
+  <a href="https://theresanaiforthat.com/ai/ai-visibility-monitor-by-work-smart-ai/"><img src="https://img.shields.io/badge/Featured-TAAFT-B08D3E?style=flat-square" alt="Featured on TAAFT"></a>
+</p>
 
-**Track whether ChatGPT, Claude, Perplexity, and Gemini are citing your site, and figure out what to do about it.**
+> **Your buyers ask ChatGPT about your category before they call you.**
+> **Want to see who it recommends instead?**
 
-Your customers are starting to use AI engines instead of Google for the questions that matter. If those engines aren't citing your site, you're invisible at exactly the moment buyers are deciding. Most "AI SEO" tools cost $500 a seat and tell you what already happened. This one runs locally on your own credentials, weekly or monthly, and tells you where to act next.
+A 4-script CLI that runs your buyer queries through Claude with web search on, records every URL it cites, and tells you whether your domain showed up. You bring 5 questions your buyers actually ask. It returns the citation map.
 
-Four Python scripts. No SaaS, no dashboard service to subscribe to. The JSON output is yours. Pipe it into whatever dashboard or report you already use.
+CLI in. JSON out. About $1 to $3 per month in API costs. No SaaS, no signup, no dashboard you'll forget about.
 
-Built for solo operators and lean consulting practices who need real visibility data without an enterprise contract.
+<p align="center">
+  <img src="assets/pretty-output.gif" alt="AI Visibility Monitor demo: pretty-printed terminal output showing 0 of 5 queries cited, top competitors per query" width="100%">
+</p>
 
-## What's in here
+## Table of contents
 
-| Script | What it does | Cadence | Credentials |
-|---|---|---|---|
-| `prereqs_sweep.py` | Checks robots.txt, llms.txt, sitemap.xml, and AI bot permissions for any list of sites | Monthly | None |
-| `citation_check.py` | Asks Claude buyer-style questions with web_search enabled, records every URL Claude cites, flags whether your domain appears | Monthly | Anthropic API key |
-| `gsc_pull.py` | Pulls Google Search Console data: top queries, top pages, country and device splits, striking-distance queries (position 5-20 with meaningful impressions) | Weekly | Google ADC |
-| `ga4_pull.py` | Pulls Google Analytics 4 data: sessions, engagement, traffic channels, **AI-referral cut** (sessions from chatgpt.com, claude.ai, perplexity.ai, gemini.google.com, copilot.microsoft.com) | Weekly | Google ADC |
+- [Why this exists](#why-this-exists)
+- [Quick start](#quick-start)
+- [What you get](#what-you-get)
+- [How it works](#how-it-works)
+- [Configuration](#configuration)
+- [Authentication](#authentication)
+- [How this compares](#how-this-compares)
+- [Roadmap](#roadmap)
+- [Contributing](#contributing)
+- [Security](#security)
+- [License](#license)
+- [Built by](#built-by)
 
-The AI-referral cut in `ga4_pull.py` is the only direct measure of whether AI citations convert to actual website visits. Citations are a leading indicator. AI referrals are the lagging one.
+## Why this exists
+
+A growing share of B2B buyer research now starts inside an AI engine, not Google. ChatGPT, Claude, Perplexity, and Google AI Overviews answer category questions ("best CRM for mid-market construction") with a synthesized response and a list of cited sources. The companies named in those responses become the shortlist before a human ever lands on a website.
+
+Most B2B sites have never measured whether they show up in that response. The few that try usually rely on enterprise SaaS tools at $29 to $499 per month with vendor-managed dashboards.
+
+This tool is the cheapest version of that check. Five queries, a few minutes of run time, $1 to $3 in API costs. Yours forever, runs on your own credentials, nothing routes through a third-party server.
 
 ## Quick start
 
 ```bash
-# 1. Clone
-git clone https://github.com/WorkSmartAI-alt/ai-visibility-monitor.git
+git clone https://github.com/WorkSmartAI-alt/ai-visibility-monitor
 cd ai-visibility-monitor
-
-# 2. Install Python deps (only what each script you'll use needs)
-pip3 install anthropic                            # for citation_check.py
-pip3 install google-api-python-client google-auth # for gsc_pull.py
-pip3 install google-analytics-data                # for ga4_pull.py
-# prereqs_sweep.py needs no deps beyond stdlib
-
-# 3. Configure your sites
-cp sites.json.example sites.json
-# edit sites.json with your domains
-
-# 4. Configure your buyer queries
 cp queries.md.example queries.md
-# edit queries.md with the 5 buyer queries you want to track
-
-# 5. Run the no-credentials script first to confirm the toolchain works
-python3 prereqs_sweep.py
-
-# 6. Configure credentials, then run the full suite (see docs below)
-python3 citation_check.py
-python3 gsc_pull.py
-python3 ga4_pull.py
+cp sites.json.example sites.json
+pip install -r requirements.txt
+export ANTHROPIC_API_KEY="sk-ant-..."
+python citation_check.py
 ```
 
-Outputs land in `./data/`. Each script writes both a dated snapshot (`gsc-2026-04-25.json`) and a stable `-latest.json` filename so any dashboard layer pointed at this folder always reads the most recent run.
+Edit `queries.md` with your 5 buyer queries. Edit `sites.json` with your domain. The script reads both, runs each query through Claude with web search on, and writes a timestamped JSON to `data/`.
 
-## Why these four scripts (and not more)
+## What you get
 
-There are five things that determine whether your site shows up in AI-generated answers:
+Output goes to `data/citations-{timestamp}.json`. Schema:
 
-1. **Crawlability.** AI bots have to be allowed through robots.txt, and they have to find your URLs through a working sitemap. `prereqs_sweep.py` checks this.
-2. **Citation rate.** When a buyer asks a question your business is supposed to answer, does your domain actually appear in the cited sources? `citation_check.py` measures this directly against Claude with web_search.
-3. **Search performance.** Google rankings are still the strongest input to AI engine training data. `gsc_pull.py` tracks how Google sees you.
-4. **Traffic conversion.** When AI engines and Google do send you traffic, does it engage and convert? `ga4_pull.py` covers this, with the AI-referral cut singled out so the GEO signal does not get buried in normal traffic.
-5. **Page performance (Core Web Vitals).** Slow pages are deprioritized by both Google and AI crawlers. A `psi_pull.py` for PageSpeed Insights is on the roadmap (issues welcome).
+```json
+{
+  "run_date_utc": "2026-04-30",
+  "generator": "citation_check.py",
+  "version": "1.0",
+  "target_domain": "your-domain.com",
+  "model": "claude-sonnet-4-6",
+  "runs_per_query": 2,
+  "summary": {
+    "queries_total": 5,
+    "queries_cited": 1,
+    "queries_uncited": 4
+  },
+  "queries": [
+    {
+      "query": "best fractional Head of AI for mid-market construction",
+      "runs": 2,
+      "cited": false,
+      "citation_rate": 0.0,
+      "position_mode": null,
+      "position_min": null,
+      "position_max": null,
+      "citations_union": [
+        {
+          "url": "https://competitor-a.com/category-page",
+          "title": "Competitor A category page",
+          "domain": "competitor-a.com"
+        }
+      ]
+    }
+  ]
+}
+```
 
-Together these four answer the operator's question: am I showing up where my buyers look, and if not, where exactly is the breakdown?
+Each query runs N times (default 2) so the data is averaged across runs, not a single sample. `position_mode` reports where your domain ranks in the citation list across runs. `citations_union` is the union of every URL Claude cited across all runs of that query.
 
-## What each output JSON looks like
+Pipe the JSON into a spreadsheet, a dashboard, a Slack notification, whatever you already use. The JSON is the deliverable.
 
-See `sample-data/` for fully-anonymized example outputs from each script. You can use these to build a dashboard against the schema before you've run the scripts on your own data.
+See [`sample-data/citations-example.json`](sample-data/citations-example.json) for a real anonymized run.
+
+## How it works
+
+Four small scripts. Each runs independently. Each writes JSON.
+
+```
+ai-visibility-monitor/
+├── citation_check.py    Runs each query through Claude with web_search on.
+│                        Records every URL in the response. Flags whether
+│                        your domain appeared.
+├── gsc_pull.py          Pulls Google Search Console data: top queries,
+│                        striking-distance positions (5 to 20).
+├── ga4_pull.py          Pulls GA4 with an AI-referrer slice (chatgpt.com,
+│                        claude.ai, perplexity.ai, gemini.google.com).
+├── prereqs_sweep.py     Audits robots.txt, llms.txt, and sitemap for
+│                        AI bot crawlability.
+└── data/                JSON output for every run, committed for transparency.
+```
+
+Four small scripts, single language (Python 3.10+), no framework dependencies beyond the Anthropic SDK and Google API client. Auditable in an afternoon.
+
+## Configuration
+
+Two files, both human-readable.
+
+**queries.md** — your 5 buyer queries, one per line:
+
+```
+best fractional Head of AI for mid-market construction
+how to track AI search visibility
+generative engine optimization tools 2026
+AI consulting Miami
+fractional CTO vs fractional Head of AI
+```
+
+**sites.json** — your domain and competitors:
+
+```json
+{
+  "primary_domain": "your-domain.com",
+  "competitors": [
+    "competitor-a.com",
+    "competitor-b.com",
+    "competitor-c.com"
+  ]
+}
+```
 
 ## Authentication
 
-### `citation_check.py` (Anthropic API)
+Three credential paths, used independently by the four scripts.
+
+| Script | Credential needed | Cost |
+|---|---|---|
+| `citation_check.py` | `ANTHROPIC_API_KEY` env var | $1 to $3 per month typical |
+| `gsc_pull.py` | Google ADC with Search Console scope | Free |
+| `ga4_pull.py` | Google ADC with Analytics scope | Free |
+| `prereqs_sweep.py` | None (HTTP only) | Free |
+
+**Anthropic:**
 
 ```bash
 export ANTHROPIC_API_KEY="sk-ant-..."
-python3 citation_check.py
 ```
 
-### `gsc_pull.py` and `ga4_pull.py` (Google ADC)
+Get a key at [console.anthropic.com](https://console.anthropic.com).
 
-The recommended path is Application Default Credentials via the gcloud CLI. This avoids storing service account keys on disk and is allowed even when your Workspace org blocks key creation.
+**Google APIs:**
 
 ```bash
-# install gcloud CLI: https://cloud.google.com/sdk/docs/install
-
-gcloud auth application-default login \
-  --scopes=https://www.googleapis.com/auth/cloud-platform,\
-https://www.googleapis.com/auth/webmasters.readonly,\
-https://www.googleapis.com/auth/analytics.readonly
-
-gcloud auth application-default set-quota-project YOUR-GCP-PROJECT-ID
+gcloud auth application-default login
 ```
 
-Enable the two APIs in your project:
+Requires the Google Cloud SDK installed locally. See [Google ADC docs](https://cloud.google.com/docs/authentication/application-default-credentials) if you haven't set this up before.
 
-- Search Console API: https://console.cloud.google.com/apis/library/searchconsole.googleapis.com
-- GA4 Data API: https://console.cloud.google.com/apis/library/analyticsdata.googleapis.com
+## How this compares
 
-If your Workspace organization blocks the default Cloud SDK OAuth client (you'll see a "this app is blocked" page), create your own OAuth client (Desktop type) in your GCP project and pass it via:
+### Versus paid SaaS
 
-```bash
-gcloud auth application-default login --client-id-file=PATH/TO/your-oauth-client.json --scopes=...
-```
+| Tool | Price | Vendor-managed | Local credentials | Open source |
+|---|---|---|---|---|
+| **AI Visibility Monitor** | **$1 to $3/month** | No | Yes | Yes |
+| [Otterly.AI](https://otterly.ai) | $29/month | Yes | No | No |
+| [Trakkr.ai](https://trakkr.ai) | Free beta | Yes | No | No |
+| [GenRank](https://genrank.io) | Pricing on request | Yes | No | No |
+| SEMrush AI Visibility | $99/month | Yes | No | No |
+| [Profound](https://tryprofound.com) | $499/month (Lite) | Yes | No | No |
 
-### Service account alternative
+The paid tools have nicer dashboards. This tool has a JSON output you can pipe into your own systems, runs on your own credentials, and the cost floor rounds to zero.
 
-If you'd rather use service account keys (for CI/CD or unattended runs), set:
+### Versus other open-source projects
 
-```bash
-export GSC_SA_KEY=/path/to/service-account.json
-```
+| Project | Surface | Output | Cost |
+|---|---|---|---|
+| **AI Visibility Monitor** | **CLI, 4 Python scripts** | **JSON** | **$1 to $3/mo (Anthropic API)** |
+| [GEO/AEO Tracker](https://github.com/danishashko/geo-aeo-tracker) | Next.js dashboard | UI + IndexedDB | Free + Bright Data API (paid) |
+| [AI Product Bench](https://github.com/amplifying-ai/ai-product-bench) | Research benchmark | JSONL + HTML dashboard | Varies by model |
+| [AI Monitor](https://getaimonitor.com/) | Hosted brand-tracking tool | UI dashboard | Free + hosted version |
+| [AutoGEO](https://github.com/cxcscmu/AutoGEO) | Content rewriter, different category | Rewritten copy | Varies |
 
-The service account email needs Full access on the GSC property and at least Viewer access on the GA4 property.
+GEO/AEO Tracker is the deployable dashboard. AI Product Bench is the consistency-research benchmark. AI Monitor is the hosted alternative. AVM is the CLI you wire into your own systems. Different audiences. Use whichever maps to what you're actually trying to build.
 
-## Recommended cadence
+## Roadmap
 
-- **Monthly:** `prereqs_sweep.py` and `citation_check.py`. Citation comparisons need 2-8 weeks to be meaningful, weekly is too noisy.
-- **Weekly:** `gsc_pull.py` and `ga4_pull.py`. Search and traffic data move week-to-week; monthly loses signal.
-- **Ad-hoc:** any script after a deploy that changes routing, redirects, robots.txt, or sitemap.
+Public, structured, every commitment visible.
 
-## Schedule it
+### v0.1.1 (this week)
 
-A simple crontab covers all four:
+- 🟡 [#1 Pretty-print citation_check output (rich library)](https://github.com/WorkSmartAI-alt/ai-visibility-monitor/issues/1)
+- 🟡 [#2 Add `--interactive` flag for first-time setup](https://github.com/WorkSmartAI-alt/ai-visibility-monitor/issues/2)
 
-```cron
-# Monthly (1st of month, 09:00 ET)
-0 9 1 * * cd /path/to/repo && python3 prereqs_sweep.py
-0 9 1 * * cd /path/to/repo && python3 citation_check.py
+### v0.2.0 (next week)
 
-# Weekly (Mondays 09:00 ET)
-0 9 * * 1 cd /path/to/repo && python3 gsc_pull.py
-0 9 * * 1 cd /path/to/repo && python3 ga4_pull.py
-```
+- ⚪ [#3 Multi-model rotation: Claude + ChatGPT + Perplexity](https://github.com/WorkSmartAI-alt/ai-visibility-monitor/issues/3)
 
-## Why I built this
+### v0.2.x backlog
 
-I'm a fractional Head of AI for mid-market companies. Most of my clients want to know: "are we showing up when our buyers ask AI tools about our category?" Existing AEO/GEO monitoring tools start at $300-500/month per site, which doesn't make sense for a 4-site portfolio.
+- ⚪ [#4 Per-bot user-agent crawl coverage tests](https://github.com/WorkSmartAI-alt/ai-visibility-monitor/issues/4)
+- ⚪ [#5 Bing Webmaster Tools data pull (feature flag)](https://github.com/WorkSmartAI-alt/ai-visibility-monitor/issues/5)
+- ⚪ [#6 IndexNow ping script](https://github.com/WorkSmartAI-alt/ai-visibility-monitor/issues/6)
+- ⚪ [#8 Visibility score (0-100 composite metric)](https://github.com/WorkSmartAI-alt/ai-visibility-monitor/issues/8)
+- ⚪ [#9 GitHub Actions workflow for scheduled runs](https://github.com/WorkSmartAI-alt/ai-visibility-monitor/issues/9)
+- ⚪ [#10 Top-cited competitors aggregation across queries](https://github.com/WorkSmartAI-alt/ai-visibility-monitor/issues/10)
 
-So I built this. It runs locally, costs nothing beyond your Anthropic API spend (about $1-3 per citation check run), and the JSON output is yours to do whatever with.
+🟢 shipped · 🟡 in progress · ⚪ planned
 
-If you want the strategic context behind why citation tracking matters for mid-market AI consulting, see https://work-smart.ai/blog/how-to-get-cited-by-ai-search.
-
-If your team needs help building this into a fuller monitoring stack or wiring it into a custom dashboard, work-smart.ai/services/ai-visibility.
+Full milestone view: [v0.1.1](https://github.com/WorkSmartAI-alt/ai-visibility-monitor/milestone/1) · [v0.2.0](https://github.com/WorkSmartAI-alt/ai-visibility-monitor/milestone/2)
 
 ## Contributing
 
-Issues and PRs welcome. Especially helpful: 
+PRs, issues, and design feedback welcome. The roadmap above is shaped by user feedback. Most of v0.2.0 came from a single Reddit comment.
 
-- A `psi_pull.py` for Core Web Vitals (PageSpeed Insights API)
-- Support for Bing Webmaster Tools alongside GSC
-- Postgres or DuckDB output instead of JSON files
-- Per-bot user-agent testing in `prereqs_sweep.py` (currently uses one generic UA)
+If you run the tool on your own domain and the output surfaces something useful or surprising, open an issue and tell me what you found. The data shapes the next release.
 
-See CONTRIBUTING.md.
+## Security
+
+Found a security issue? Email ignacio@work-smart.ai instead of opening a public issue. Responsible disclosure appreciated.
 
 ## License
 
-MIT. Use it, fork it, build a SaaS on top of it. Attribution appreciated but not required.
+MIT, see [LICENSE](LICENSE). Yours to fork, modify, and use commercially. No lock-in, no attribution required (though appreciated).
 
----
+## Built by
 
-Built by [Ignacio Lopez](https://www.linkedin.com/in/ignaciolopez2017/), [Work-Smart.ai](https://work-smart.ai). Originally part of an internal monitoring stack for Work-Smart's AI visibility work with mid-market clients.
+[![Work-Smart.ai](https://img.shields.io/badge/Built_by-WORK--SMART.AI-B08D3E?style=for-the-badge)](https://work-smart.ai)
+
+[Work-Smart.ai](https://work-smart.ai) is a fractional Head of AI practice for mid-market companies in Miami and LatAm. Operated by [Ignacio Lopez](https://www.linkedin.com/in/ignaciolopez), bilingual English and Spanish, specializing in mid-market AI implementations: WhatsApp agents, document AI, AI visibility, custom copilots.
+
+If your team is running into 0 of 5 citations on your buyer queries and wants help moving the number, that's the day job. [Get in touch](https://work-smart.ai/contact).

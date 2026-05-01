@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 320" width="1280" height="320" role="img" aria-label="AI Visibility Monitor by Work-Smart.ai">
+  <title>AI Visibility Monitor by Work-Smart.ai</title>
+  <desc>Open-source CLI tool that tracks which sites ChatGPT and Claude cite for your buyer queries. MIT licensed.</desc>
+
+  <rect width="1280" height="320" fill="#1A1A1A"/>
+
+  <text x="1200" y="50" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="14" fill="#8A8A8A" text-anchor="end">$ python citation_check.py</text>
+
+  <line x1="80" y1="100" x2="200" y2="100" stroke="#B08D3E" stroke-width="2.5"/>
+
+  <text x="80" y="160" font-family="Georgia, 'Times New Roman', serif" font-size="52" font-weight="700" fill="#F5F5F3" letter-spacing="-1">AI Visibility Monitor</text>
+
+  <text x="80" y="200" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="19" fill="#C8C5BD">Find out which sites ChatGPT and Claude cite for your buyer queries.</text>
+
+  <text x="80" y="228" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="15" fill="#7A7A7A">CLI in. Citation data out. About $1 to $3 per month. MIT licensed.</text>
+
+  <text x="80" y="290" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="700" letter-spacing="2.5" fill="#F5F5F3">WORK-SMART<tspan fill="#B08D3E">.AI</tspan></text>
+
+  <text x="1200" y="290" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="11" fill="#5A5A5A" text-anchor="end">open source · MIT license · v0.1.0</text>
+</svg>

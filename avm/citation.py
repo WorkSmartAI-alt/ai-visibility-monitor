@@ -184,11 +184,18 @@ def run_citation_check(
             continue
 
         primary = results_per_engine[primary_name]
+
+        # Cross-engine aggregation: cited if ANY engine cited the domain
+        any_cited = any(r["cited"] for r in results_per_engine.values())
+        best_rate = max((r["citation_rate"] for r in results_per_engine.values()), default=0.0)
+        cited_by = [eng for eng, r in results_per_engine.items() if r["cited"]]
+
         query_result: dict = {
             "query": query,
             "runs": primary["runs"],
-            "cited": primary["cited"],
-            "citation_rate": primary["citation_rate"],
+            "cited": any_cited,
+            "citation_rate": best_rate,
+            "cited_by": cited_by,
             "position_mode": primary.get("position_mode"),
             "position_min": primary.get("position_min"),
             "position_max": primary.get("position_max"),

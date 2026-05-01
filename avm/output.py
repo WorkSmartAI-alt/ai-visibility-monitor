@@ -28,12 +28,16 @@ def write_json(data: dict, path: Path) -> None:
 
 
 def _top_competitor(result: dict) -> tuple[str, int] | None:
-    """Find the competitor domain cited in the most queries."""
+    """Find the competitor domain cited in the most queries, across all engines."""
     counts: Counter = Counter()
     target = result.get("target_domain", "")
     for q in result.get("queries", []):
         seen_in_query: set[str] = set()
-        for c in q.get("citations_union", []):
+        # Collect all citation sources: primary union + per-engine unions
+        all_citations: list[dict] = list(q.get("citations_union", []))
+        for eng_data in (q.get("results_per_engine") or {}).values():
+            all_citations.extend(eng_data.get("citations_union", []))
+        for c in all_citations:
             d = c.get("domain", "")
             if d and d != target and target not in d and d not in seen_in_query:
                 seen_in_query.add(d)
@@ -125,6 +129,11 @@ def pretty_print(result: dict) -> None:
         breakdown_text.append("     Cited: ", style="default")
         if cited:
             breakdown_text.append("✓", style="bold green")
+            cited_by = q.get("cited_by", [])
+            if cited_by:
+                from avm.engines import ENGINE_REGISTRY
+                labels = [ENGINE_REGISTRY.get(e, {}).get("label", e) for e in cited_by]
+                breakdown_text.append(f" ({', '.join(labels)})", style="bold green")
         else:
             breakdown_text.append("✗", style="bold red")
         breakdown_text.append(f"  ·  Citation rate: {cite_rate}%\n", style="default")
@@ -171,8 +180,14 @@ def _plain_print(result: dict) -> None:
     print("=" * 60)
     print(f"Cited in {queries_cited} of {queries_total} queries.")
     for q in result.get("queries", []):
-        tag = f"YES #{q['position_mode']}" if q.get("cited") else "NO"
-        print(f"  [{tag:>6}]  {q['query']}")
+        cited_by = q.get("cited_by", [])
+        if q.get("cited") and cited_by:
+            tag = f"YES ({', '.join(cited_by)})"
+        elif q.get("cited"):
+            tag = f"YES #{q.get('position_mode', '?')}"
+        else:
+            tag = "NO"
+        print(f"  [{tag}]  {q['query']}")
         per_engine = q.get("results_per_engine")
         if per_engine:
             parts = [f"{eng}: {'cited' if d.get('cited') else 'not cited'}" for eng, d in per_engine.items()]

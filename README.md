@@ -10,12 +10,13 @@
   <a href="https://theresanaiforthat.com/ai/ai-visibility-monitor-by-work-smart-ai/"><img src="https://img.shields.io/badge/Featured-TAAFT-B08D3E?style=flat-square" alt="Featured on TAAFT"></a>
 </p>
 
-> **Your buyers ask ChatGPT, Claude, and Perplexity about your category before they call you.**
-> **Want to see who they recommend instead?**
+**Most tools tell you if AI cites you. This tells you which queries you can win and what to make.**
 
-A CLI tool that runs your buyer queries through Claude, ChatGPT, and Perplexity with web search on, records every URL each engine cites, and tells you whether your domain showed up. You bring 5 questions your buyers actually ask. It returns the citation map across all three engines — plus which queries you can realistically break into next.
+Your buyers are asking ChatGPT, Claude, and Perplexity for recommendations. AVM is the open-source CLI that runs your buyer queries against all three, scores adjacent queries you can realistically win in 30 to 60 days, classifies which surfaces drive citations in your category (press, blog, forum, community), and tracks your visibility trajectory week over week.
 
-CLI in. JSON out. About $0.30 per run on the default model. No SaaS, no signup, no dashboard you'll forget about.
+Free, no signup, no SaaS upsell. Customer keeps all data. Multi-engine in a single command, ~$0.30 per weekly run.
+
+[Quick Start ↓](#quick-start)
 
 <p align="center">
   <img src="assets/pretty-output.png" alt="AI Visibility Monitor demo: pretty-printed terminal output showing 0 of 5 queries cited, top competitors per query" width="100%">

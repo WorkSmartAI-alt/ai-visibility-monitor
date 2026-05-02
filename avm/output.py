@@ -150,7 +150,7 @@ def pretty_print(result: dict) -> None:
             breakdown_text.append("     Engines: ", style="default")
             breakdown_text.append(" / ".join(engine_parts) + "\n", style="dim")
 
-        # Surface distribution
+        # Surface distribution with optional baseline annotations
         surf_dist = q.get("surface_distribution", {})
         if surf_dist:
             total_cites = sum(surf_dist.values())
@@ -160,6 +160,33 @@ def pretty_print(result: dict) -> None:
                 parts.append(f"{pct}% {cat.replace('_', ' ')}")
             breakdown_text.append("     Surface mix: ", style="default")
             breakdown_text.append(" · ".join(parts) + "\n", style="dim")
+
+            # Baseline annotations (shown when vertical is set and engines are known)
+            vertical = result.get("vertical")
+            active_engines = result.get("engines", [])
+            if vertical and active_engines and total_cites > 0:
+                try:
+                    from avm.baselines import annotate_surface_distribution
+                    from avm.surfaces import parent_distribution
+                    parent_dist = parent_distribution(surf_dist)
+                    for engine_name in active_engines[:1]:  # annotate against first/primary engine
+                        annotations = annotate_surface_distribution(surf_dist, engine_name, vertical)
+                        for parent_name, ann in sorted(annotations.items(), key=lambda x: -x[1]["count"]):
+                            comp = ann.get("baseline")
+                            if comp and comp["label"] != "at baseline":
+                                est_marker = "~" if comp.get("is_estimated") else ""
+                                pct = int(ann["share"] * 100)
+                                bl_pct = int(comp["baseline"] * 100)
+                                magnitude = comp["magnitude"]
+                                label = comp["label"]
+                                breakdown_text.append(
+                                    f"       {parent_name}: {pct}%  "
+                                    f"(baseline {est_marker}{bl_pct}%, {magnitude} {label})\n",
+                                    style="dim",
+                                )
+                except Exception:
+                    pass
+
             action = q.get("suggested_action", "")
             if action:
                 breakdown_text.append("     Action: ", style="default")
@@ -292,6 +319,81 @@ def _plain_print_trend(trend: dict) -> None:
         print("\nDropped competitors:")
         for c in dropped_competitors:
             print(f"  - {c['domain']}  (last seen run {c['last_seen_run']})")
+
+
+def pretty_print_threads(threads: list[dict]) -> None:
+    """Pretty-print avm threads output."""
+    if not _RICH_AVAILABLE:
+        _plain_print_threads(threads)
+        return
+
+    console = Console()
+    console.print()
+
+    if not threads:
+        console.print(Panel(
+            "\n  No community threads found.\n"
+            "  Run avm with more historical data or lower --min-queries.\n",
+            title="[bold blue]HIGH-LEVERAGE COMMUNITY THREADS[/bold blue]",
+            box=rich_box.ROUNDED,
+            padding=(0, 0),
+        ))
+        return
+
+    text = Text()
+    text.append("\n")
+    for i, t in enumerate(threads, 1):
+        url = t["url"]
+        surface = t["surface"]
+        query_count = t["query_count"]
+        engine_count = t["engine_count"]
+        engines = t.get("engines", [])
+        sample_queries = t.get("sample_queries", [])
+        last_seen = t.get("last_seen", "")
+
+        text.append(f"  {i}. ", style="default")
+        text.append(url + "\n", style="bold cyan")
+        text.append(f"     Surface: ", style="default")
+        text.append(f"{surface}", style="dim")
+        if engines:
+            from avm.engines import ENGINE_REGISTRY
+            labels = [ENGINE_REGISTRY.get(e, {}).get("label", e) for e in engines]
+            text.append(f"  ·  Cited by: {', '.join(labels)}", style="dim")
+        text.append(f"  ·  {query_count} quer{'y' if query_count == 1 else 'ies'}\n", style="dim")
+        if sample_queries:
+            for sq in sample_queries[:2]:
+                text.append(f"     Across: {sq}\n", style="italic dim")
+        if last_seen:
+            text.append(f"     Last seen: {last_seen}\n", style="dim")
+        text.append("\n")
+
+    text.append(
+        "  Action: comment on these threads from your own account.\n"
+        "  Do NOT use a posting service. Comments must come from\n"
+        "  a real account that builds karma over time.\n",
+        style="bold yellow",
+    )
+
+    console.print(Panel(
+        text,
+        title="[bold blue]HIGH-LEVERAGE COMMUNITY THREADS[/bold blue]",
+        box=rich_box.ROUNDED,
+        padding=(0, 0),
+    ))
+    console.print()
+
+
+def _plain_print_threads(threads: list[dict]) -> None:
+    print("\nHIGH-LEVERAGE COMMUNITY THREADS")
+    print("=" * 60)
+    if not threads:
+        print("  No community threads found.")
+        return
+    for i, t in enumerate(threads, 1):
+        print(f"  {i}. {t['url']}")
+        print(f"     Surface: {t['surface']}  ·  {t['query_count']} queries  ·  engines: {', '.join(t.get('engines', []))}")
+    print("\n  Action: comment on these threads from your own account.")
+    print("  Do NOT use a posting service.")
 
 
 def _plain_print(result: dict) -> None:

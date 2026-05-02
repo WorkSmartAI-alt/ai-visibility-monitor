@@ -1,5 +1,7 @@
 # Output data: your real GSC/GA4/citation results stay private
-data/
+/data/
+# But avm/data/ (package data: baselines.json etc.) IS committed
+!/avm/data/
 
 # Local site config: copy sites.json.example to sites.json and edit
 sites.json

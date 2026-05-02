@@ -28,6 +28,8 @@ CLI in. JSON out. About $0.30 per run on the default model. No SaaS, no signup, 
 - [What you get](#what-you-get)
 - [Adjacent query discovery (--expand)](#adjacent-query-discovery---expand)
 - [Source-surface categorization](#source-surface-categorization)
+- [Community threads (avm threads)](#community-threads-avm-threads)
+- [Vertical baselines](#vertical-baselines)
 - [Citation trajectory (avm trend)](#citation-trajectory-avm-trend)
 - [How it works](#how-it-works)
 - [Configuration](#configuration)
@@ -148,22 +150,31 @@ Cost: ~$0.90 per `--expand` run on the default Haiku model (15 extra queries × 
 
 ## Source-surface categorization
 
-Every cited URL is now automatically categorized by surface type: press, blog, forum, wikipedia, official docs, GitHub, LinkedIn, YouTube, job board, or uncategorized.
+Every cited URL is automatically categorized by surface type. v0.2.2 added 10 distinct community sub-categories replacing the coarse "forum" bucket:
+
+| Category | Examples |
+|---|---|
+| `reddit` | reddit.com |
+| `quora` | quora.com |
+| `stackoverflow` | stackoverflow.com |
+| `stackexchange` | *.stackexchange.com |
+| `ycombinator` | news.ycombinator.com |
+| `g2` | g2.com |
+| `trustpilot` | trustpilot.com |
+| `producthunt` | producthunt.com |
+| `press` | techcrunch.com, forbes.com, ... |
+| `blog` | medium.com, substack.com, ... |
+| `consulting_competitors` | headofai.ai, chiefaiofficer.com, ... |
+| `industry_news` | prnewswire.com, constructiondive.com, ... |
+
+Categories roll up to parent buckets (`community`, `press`, `official`, `blog`, `social`) for top-level analysis and baseline comparisons.
 
 The per-query breakdown shows the surface mix and a suggested action:
 
 ```
-Surface mix: 40% press · 30% blog · 20% forum · 10% uncategorized
-Action: pitch HARO/Qwoted, target press placements
+Surface mix: 40% press · 30% reddit · 20% blog · 10% uncategorized
+Action: engage in relevant subreddits — comment under your own account
 ```
-
-**Action heuristics:**
-- press > 50% → pitch HARO/Qwoted, target press placements
-- forum > 40% → build authority in relevant subreddits and Q&A
-- blog > 40% → guest post or invest in your own blog
-- official_docs > 30% → hard surface to displace, deprioritize
-- uncategorized > 50% → long-tail / niche market, your own content can win
-- balanced mix → all-channel approach
 
 **Override with `surfaces.json`** in your working directory to add your own categories:
 
@@ -174,7 +185,74 @@ Action: pitch HARO/Qwoted, target press placements
 }
 ```
 
-User-defined categories merge with the defaults. Your entries take priority.
+## Community threads (`avm threads`)
+
+Read all historical citation data and surface the specific Reddit, Quora, and other community threads that keep being cited across multiple queries and engines. These are the threads worth engaging with under your own account.
+
+```bash
+avm threads                    # All community surfaces, min 1 query
+avm threads --surface reddit   # Reddit only
+avm threads --min-queries 2    # Only threads cited across 2+ distinct queries
+avm threads --top 10           # Top 10 only
+avm threads --json             # Machine-readable output
+```
+
+Output:
+
+```
+╭──── HIGH-LEVERAGE COMMUNITY THREADS ──────────────────────╮
+│                                                           │
+│  1. reddit.com/r/consulting/comments/abc123               │
+│     Surface: reddit  ·  Cited by: Perplexity, ChatGPT     │
+│     Across: fractional head of ai                         │
+│                                                           │
+│  2. quora.com/What-is-a-fractional-head-of-AI             │
+│     Surface: quora  ·  Cited by: ChatGPT, Claude          │
+│     Across: what is fractional head of ai                 │
+│                                                           │
+│  Action: comment on these threads from your own account.  │
+│  Do NOT use a posting service. Comments must come from    │
+│  a real account that builds karma over time.              │
+│                                                           │
+╰───────────────────────────────────────────────────────────╯
+```
+
+The command is useful once you have 2+ historical runs. With one run it shows threads cited in at least 1 query.
+
+## Vertical baselines
+
+AVM ships with built-in surface-share baselines per engine per industry vertical, so you know whether your surface mix is above or below average for your category.
+
+```bash
+avm --vertical professional_services   # Use professional services baselines
+avm --vertical construction            # Use construction baselines
+avm --vertical wealth_management       # Use wealth management baselines
+```
+
+You can also add a `"vertical"` field to your `sites.json` entry and it will be picked up automatically:
+
+```json
+[
+  {
+    "name": "Your Brand",
+    "url": "https://your-domain.com",
+    "owner": "self",
+    "vertical": "professional_services"
+  }
+]
+```
+
+When a vertical is active, each query's surface mix shows a baseline comparison:
+
+```
+Surface mix: 60% community · 25% press · 15% blog
+  community: 60%  (baseline ~18%, significantly above average)
+  press:     25%  (baseline 25%, at baseline)
+```
+
+**Baseline data source:** Tinuiti Q1 2026 AI Citation Trends Report + 5W AI Platform Citation Source Index (May 2026). Perplexity default: 24% community. ChatGPT: ~5% community. Claude: ~5% (estimated — no public data). Vertical breakdowns (construction, legal, wealth_management) are estimated from B2B category research; treat as directional, not hard data. Updated quarterly with each minor release.
+
+Available verticals: `default`, `professional_services`, `construction`, `legal`, `wealth_management`, `distribution`.
 
 ## Citation trajectory (`avm trend`)
 
@@ -369,6 +447,19 @@ Public, structured, every commitment visible.
 - 🟢 [#17 Source-surface categorization](https://github.com/WorkSmartAI-alt/ai-visibility-monitor/issues/17)
 - 🟢 [#18 `avm trend` citation trajectory command](https://github.com/WorkSmartAI-alt/ai-visibility-monitor/issues/18)
 
+### v0.2.2 (shipped)
+
+- 🟢 [#19 Fix scoring + expand surface categories + tighten expansion prompt](https://github.com/WorkSmartAI-alt/ai-visibility-monitor/issues/19)
+  - Winnability scoring now produces spread across queries (weighted additive formula)
+  - Rationale is specific: references top citing domain, surface %, per-engine visibility
+  - Expansion prompt is ICP-constrained (infers buyer profile from base queries)
+  - 10 distinct community sub-categories: reddit, quora, stackoverflow, stackexchange, ycombinator, g2, trustpilot, yelp, glassdoor, producthunt
+  - `community` parent bucket for rollup reporting
+  - `consulting_competitors` and `industry_news` categories for AI consulting use case
+  - `avm threads` subcommand: surface high-leverage community threads from citation history
+  - Vertical baselines: built-in surface-share benchmarks per engine per industry vertical (`baselines.json`)
+  - `--vertical` flag for baseline annotations in surface mix output
+
 ### v0.2.x backlog
 
 - ⚪ [#4 Per-bot user-agent crawl coverage tests](https://github.com/WorkSmartAI-alt/ai-visibility-monitor/issues/4)
@@ -380,7 +471,7 @@ Public, structured, every commitment visible.
 
 🟢 shipped · 🟡 in progress · ⚪ planned
 
-Full milestone view: [v0.1.1](https://github.com/WorkSmartAI-alt/ai-visibility-monitor/milestone/1) · [v0.2.0](https://github.com/WorkSmartAI-alt/ai-visibility-monitor/milestone/2) · [v0.2.1](https://github.com/WorkSmartAI-alt/ai-visibility-monitor/milestone/3)
+Full milestone view: [v0.1.1](https://github.com/WorkSmartAI-alt/ai-visibility-monitor/milestone/1) · [v0.2.0](https://github.com/WorkSmartAI-alt/ai-visibility-monitor/milestone/2) · [v0.2.1](https://github.com/WorkSmartAI-alt/ai-visibility-monitor/milestone/3) · [v0.2.2](https://github.com/WorkSmartAI-alt/ai-visibility-monitor/milestone/4)
 
 ## Contributing
 

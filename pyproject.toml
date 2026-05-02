@@ -1,6 +1,6 @@
 [project]
 name = "ai-visibility-monitor"
-version = "0.2.1"
+version = "0.2.2"
 description = "Find out which sites ChatGPT and Claude cite for your buyer queries"
 readme = "README.md"
 license = {file = "LICENSE"}
@@ -36,6 +36,9 @@ avm-prereqs-sweep = "avm.prereqs:main_cli"
 
 [tool.setuptools.packages.find]
 include = ["avm*"]
+
+[tool.setuptools.package-data]
+"avm.data" = ["*.json"]
 
 [build-system]
 requires = ["setuptools>=68.0"]

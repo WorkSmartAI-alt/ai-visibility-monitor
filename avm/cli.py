@@ -54,6 +54,11 @@ def main(argv: list[str] | None = None) -> int:
     )
     parser.add_argument("--max-searches", type=int, default=5, help="Max web_search calls per run (Claude only)")
     parser.add_argument("--expand", action="store_true", help="Generate 15 adjacent queries and rank by winnability")
+    parser.add_argument(
+        "--vertical",
+        default=None,
+        help="Industry vertical for baseline comparisons (e.g. construction, legal, wealth_management, professional_services)",
+    )
 
     subparsers = parser.add_subparsers(dest="command")
     subparsers.add_parser("setup", help="Run the setup wizard")
@@ -66,6 +71,12 @@ def main(argv: list[str] | None = None) -> int:
     trend_parser.add_argument("--since", default=None, help="Only include runs on or after this date (YYYY-MM-DD)")
     trend_parser.add_argument("--engine", default=None, help="Filter to a specific engine (claude, chatgpt, perplexity)")
     trend_parser.add_argument("--json", dest="output_json", action="store_true", help="Raw JSON output to stdout")
+
+    threads_parser = subparsers.add_parser("threads", help="Surface high-leverage community threads from citation history")
+    threads_parser.add_argument("--surface", default=None, help="Filter to a specific surface (e.g. reddit, quora)")
+    threads_parser.add_argument("--min-queries", type=int, default=1, dest="min_queries", help="Min distinct queries a thread must appear in (default 1)")
+    threads_parser.add_argument("--top", type=int, default=20, help="Max threads to show (default 20)")
+    threads_parser.add_argument("--json", dest="output_json", action="store_true", help="Raw JSON output to stdout")
 
     args = parser.parse_args(argv)
 
@@ -103,6 +114,9 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.command == "trend":
         return _run_trend(args)
+
+    if args.command == "threads":
+        return _run_threads(args)
 
     return 0
 
@@ -198,6 +212,29 @@ def _run_citations(args: argparse.Namespace) -> int:
     output_path = output_dir / f"citations-{result['run_date_utc']}.json"
     write_json(result, output_path)
 
+    # Pass vertical for baseline annotations
+    vertical = getattr(args, "vertical", None)
+    if vertical is None and sites_path.exists():
+        # Check sites.json for a vertical field
+        try:
+            raw_sites = json_mod.loads(sites_path.read_text(encoding="utf-8"))
+            if isinstance(raw_sites, list):
+                for site in raw_sites:
+                    if site.get("owner") == "self" and site.get("vertical"):
+                        vertical = site["vertical"]
+                        break
+            elif isinstance(raw_sites, dict) and raw_sites.get("vertical"):
+                vertical = raw_sites["vertical"]
+        except Exception:
+            pass
+    if vertical:
+        result["vertical"] = vertical
+
+    output_dir = Path("data")
+    output_dir.mkdir(parents=True, exist_ok=True)
+    output_path = output_dir / f"citations-{result['run_date_utc']}.json"
+    write_json(result, output_path)
+
     if args.output_json:
         print(json_mod.dumps(result, indent=2))
         print(f"\n  JSON output written to: {output_path}", file=sys.stderr)
@@ -229,4 +266,25 @@ def _run_trend(args: argparse.Namespace) -> int:
         print(json_mod.dumps(result, indent=2))
     else:
         pretty_print_trend(result)
+    return 0
+
+
+def _run_threads(args: argparse.Namespace) -> int:
+    import json as json_mod
+    from avm.threads import find_top_threads
+    from avm.output import pretty_print_threads
+
+    surface_filter = [args.surface] if getattr(args, "surface", None) else None
+    threads = find_top_threads(
+        data_dir=Path("data"),
+        surface_filter=surface_filter,
+        min_query_count=getattr(args, "min_queries", 1),
+        top_n=getattr(args, "top", 20),
+    )
+
+    output_json = getattr(args, "output_json", False)
+    if output_json:
+        print(json_mod.dumps(threads, indent=2))
+    else:
+        pretty_print_threads(threads)
     return 0

@@ -1,0 +1,114 @@
+{
+  "_comment": "Surface-share baselines per engine per vertical. Used to annotate AVM output with 'above/at/below baseline' signals.",
+  "version": "2026-05-01",
+  "source": "Tinuiti Q1 2026 AI Citation Trends Report (Feb 2026) + 5W AI Platform Citation Source Index (May 2026) + Profound Citation Patterns analysis",
+  "source_urls": [
+    "https://tinuiti.com/blog/search/ai-citations/",
+    "https://www.tryprofound.com/blog/ai-platform-citation-patterns"
+  ],
+  "next_update": "2026-08-01",
+  "_data_notes": {
+    "perplexity_community": "24% of ALL Perplexity citations came from Reddit (Tinuiti Jan 2026). Note: 46.7% of Perplexity's top-10 most-cited sources are Reddit — a different metric. We use the all-citations figure (24%) as the more representative baseline.",
+    "chatgpt_community": "~5% of ChatGPT citations from Reddit (Tinuiti Jan 2026). Highly volatile — fell from 60% to 10% in 6 weeks in late 2025 before stabilizing.",
+    "claude_community": "No public data as of May 2026. Claude heavily favors traditional journalism. Estimate: ~5% or less. Marked as estimated.",
+    "vertical_breakdowns": "Construction/legal/wealth_management vertical data not publicly available from any credible May 2026 source. Figures are directional estimates based on general B2B vs B2C Reddit citation research and Discovered Labs B2B category analysis. Treat as rough guidance, not hard data.",
+    "last_verified": "2026-05-01"
+  },
+  "engines": {
+    "perplexity": {
+      "default": {
+        "community": 0.24,
+        "press": 0.20,
+        "official": 0.14,
+        "blog": 0.18,
+        "social": 0.08,
+        "competitor": 0.04,
+        "other": 0.12
+      },
+      "professional_services": {
+        "_estimated": true,
+        "community": 0.18,
+        "press": 0.25,
+        "official": 0.16,
+        "blog": 0.22,
+        "social": 0.08,
+        "competitor": 0.05,
+        "other": 0.06
+      },
+      "construction": {
+        "_estimated": true,
+        "community": 0.16,
+        "press": 0.28,
+        "official": 0.14,
+        "blog": 0.20,
+        "social": 0.06,
+        "competitor": 0.04,
+        "other": 0.12
+      },
+      "legal": {
+        "_estimated": true,
+        "community": 0.10,
+        "press": 0.32,
+        "official": 0.30,
+        "blog": 0.14,
+        "social": 0.04,
+        "competitor": 0.03,
+        "other": 0.07
+      },
+      "wealth_management": {
+        "_estimated": true,
+        "community": 0.12,
+        "press": 0.35,
+        "official": 0.28,
+        "blog": 0.14,
+        "social": 0.04,
+        "competitor": 0.03,
+        "other": 0.04
+      },
+      "distribution": {
+        "_estimated": true,
+        "community": 0.15,
+        "press": 0.26,
+        "official": 0.18,
+        "blog": 0.20,
+        "social": 0.06,
+        "competitor": 0.04,
+        "other": 0.11
+      }
+    },
+    "chatgpt": {
+      "default": {
+        "community": 0.05,
+        "press": 0.34,
+        "official": 0.22,
+        "blog": 0.22,
+        "social": 0.07,
+        "competitor": 0.03,
+        "other": 0.07
+      },
+      "professional_services": {
+        "_estimated": true,
+        "community": 0.04,
+        "press": 0.36,
+        "official": 0.22,
+        "blog": 0.24,
+        "social": 0.06,
+        "competitor": 0.03,
+        "other": 0.05
+      }
+    },
+    "claude": {
+      "_note": "No public citation distribution data as of May 2026. All values estimated based on qualitative research (Claude heavily favors traditional journalism).",
+      "default": {
+        "_estimated": true,
+        "community": 0.05,
+        "press": 0.38,
+        "official": 0.28,
+        "blog": 0.18,
+        "social": 0.04,
+        "competitor": 0.02,
+        "other": 0.05
+      }
+    }
+  }
+}

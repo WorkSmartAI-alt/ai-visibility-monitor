@@ -78,6 +78,14 @@ def main(argv: list[str] | None = None) -> int:
     threads_parser.add_argument("--top", type=int, default=20, help="Max threads to show (default 20)")
     threads_parser.add_argument("--json", dest="output_json", action="store_true", help="Raw JSON output to stdout")
 
+    audit_parser = subparsers.add_parser(
+        "audit-prospect",
+        help="Score any domain 0-100 across 6 AI visibility categories",
+    )
+    audit_parser.add_argument("url", help="Domain to audit (e.g. https://example.com)")
+    audit_parser.add_argument("--json", dest="output_json", action="store_true", help="Raw JSON output to stdout")
+    audit_parser.add_argument("--timeout", type=int, default=5, help="Per-request HTTP timeout in seconds (default 5)")
+
     args = parser.parse_args(argv)
 
     if args.version:
@@ -117,6 +125,9 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.command == "threads":
         return _run_threads(args)
+
+    if args.command == "audit-prospect":
+        return _run_audit_prospect(args)
 
     return 0
 
@@ -266,6 +277,26 @@ def _run_trend(args: argparse.Namespace) -> int:
         print(json_mod.dumps(result, indent=2))
     else:
         pretty_print_trend(result)
+    return 0
+
+
+def _run_audit_prospect(args: argparse.Namespace) -> int:
+    import json as json_mod
+    from avm.audit_prospect import run_audit
+    from avm.output import pretty_print_audit
+
+    url = getattr(args, "url", "")
+    timeout = getattr(args, "timeout", 5)
+    output_json = getattr(args, "output_json", False)
+
+    print(f"[audit] scanning {url} ...", file=sys.stderr, flush=True)
+
+    result = run_audit(url, timeout=timeout)
+
+    if output_json:
+        print(json_mod.dumps(result, indent=2))
+    else:
+        pretty_print_audit(result)
     return 0
 
 

@@ -27,6 +27,7 @@ Free, no signup, no SaaS upsell. Customer keeps all data. Multi-engine in a sing
 - [Why this exists](#why-this-exists)
 - [Quick start](#quick-start)
 - [What you get](#what-you-get)
+- [Prospect audit (avm audit-prospect)](#prospect-audit-avm-audit-prospect)
 - [Adjacent query discovery (--expand)](#adjacent-query-discovery---expand)
 - [Source-surface categorization](#source-surface-categorization)
 - [Community threads (avm threads)](#community-threads-avm-threads)
@@ -124,6 +125,53 @@ Each query runs N times (default 2) so the data is averaged across runs, not a s
 Pipe the JSON into a spreadsheet, a dashboard, a Slack notification, whatever you already use. The JSON is the deliverable.
 
 See [`sample-data/citations-example.json`](sample-data/citations-example.json) for a real anonymized run.
+
+## Prospect audit (`avm audit-prospect`)
+
+Score any public domain 0-100 across six AI visibility categories. Built for quick discovery calls: run it in under 90 seconds, show the result, explain the gaps.
+
+```bash
+avm audit-prospect https://example.com
+avm audit-prospect https://example.com --json   # pipe into Slack or a spreadsheet
+```
+
+Sample output:
+
+```
+╭──── AI Visibility Readiness Audit · work-smart.ai ────────────╮
+│                                                               │
+│  Score: 95 / 100  ·  Grade: A                                 │
+│  Sampled: 10 pages from sitemap  ·  6.0s                      │
+│                                                               │
+│  Crawler Accessibility    30 / 30  ✓                          │
+│  Discovery Files          15 / 15  ✓                          │
+│  Schema Markup            10 / 15                             │
+│  Render Performance       15 / 15  ✓                          │
+│  Meta + HTML Quality      10 / 10  ✓                          │
+│  Open Graph + Social      10 / 10  ✓                          │
+│                                                               │
+│  Top 3 fixes by impact:                                       │
+│  1. Add Service schema to service pages (+5 pts, ~1h)         │
+│                                                               │
+╰───────────────────────────────────────────────────────────────╯
+```
+
+**Scoring rubric (100 points total):**
+
+| Category | Points | What it checks |
+|---|---|---|
+| Crawler Accessibility | 30 | robots.txt access for 20 AI bot UAs (GPTBot, ClaudeBot, PerplexityBot, and 17 others) |
+| Discovery Files | 15 | llms.txt present, sitemap fresh (< 30 days), robots.txt explicitly names AI bots |
+| Schema Markup | 20 | JSON-LD blocks: Service, FAQPage (5+ Q&As), Article on blog posts, BreadcrumbList |
+| Render Performance | 15 | Pages return 200 with Googlebot UA, content is pre-rendered or large |
+| Meta + HTML Quality | 10 | Title 30-65 chars, description 120-160 chars, single H1, canonical matches URL |
+| Open Graph + Social | 10 | og:title, og:description, og:image (reachable), og:type, twitter:card |
+
+**Grade thresholds:** A (90+), B (80+), C (70+), D (60+), F (below 60)
+
+The audit fetches pages with a GPTBot UA so pre-render layers serve full HTML, matching what AI crawlers actually receive.
+
+No API keys required. No writes. Reads only.
 
 ## Adjacent query discovery (`--expand`)
 

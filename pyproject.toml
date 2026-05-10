@@ -1,6 +1,6 @@
 [project]
 name = "ai-visibility-monitor"
-version = "0.2.2"
+version = "0.3.0"
 description = "Find out which sites ChatGPT and Claude cite for your buyer queries"
 readme = "README.md"
 license = {file = "LICENSE"}
@@ -39,6 +39,11 @@ include = ["avm*"]
 
 [tool.setuptools.package-data]
 "avm.data" = ["*.json"]
+
+[tool.pytest.ini_options]
+markers = [
+    "live: marks tests that make real network requests (deselect with -m 'not live')",
+]
 
 [build-system]
 requires = ["setuptools>=68.0"]

@@ -396,6 +396,127 @@ def _plain_print_threads(threads: list[dict]) -> None:
     print("  Do NOT use a posting service.")
 
 
+def pretty_print_audit(result: dict) -> None:
+    """Pretty-print an avm audit-prospect result."""
+    if not _RICH_AVAILABLE:
+        _plain_print_audit(result)
+        return
+
+    console = Console()
+    domain = result.get("domain", "")
+    score = result.get("score", 0)
+    grade = result.get("grade", "?")
+    pages = result.get("pages_sampled", 0)
+    elapsed = result.get("elapsed_seconds", 0)
+
+    CATEGORY_LABELS = {
+        "crawler_accessibility": "Crawler Accessibility",
+        "discovery_files": "Discovery Files",
+        "schema_markup": "Schema Markup",
+        "render_performance": "Render Performance",
+        "meta_html_quality": "Meta + HTML Quality",
+        "og_social": "Open Graph + Social",
+    }
+
+    if score >= 80:
+        score_style = "bold green"
+    elif score >= 60:
+        score_style = "bold yellow"
+    else:
+        score_style = "bold red"
+
+    text = Text()
+    text.append("\n")
+    text.append(f"  Score: ", style="default")
+    text.append(f"{score} / 100", style=score_style)
+    text.append(f"  ·  Grade: ", style="default")
+    text.append(grade, style=score_style)
+    text.append(f"\n  Sampled: {pages} pages from sitemap")
+    text.append(f"  ·  {elapsed}s\n\n")
+
+    cats = result.get("categories", {})
+    for key, label in CATEGORY_LABELS.items():
+        cat = cats.get(key, {})
+        pts = cat.get("points", 0)
+        mx = cat.get("max_points", 0)
+        pct = pts / mx if mx else 0
+        marker = ""
+        if pct >= 0.95:
+            marker = " [bold green]checkmark[/bold green]"
+        elif pct < 0.5:
+            marker = " [bold yellow]warning[/bold yellow]"
+        # Use plain unicode so rich doesn't interpret special chars
+        tick = " ✓" if pct >= 0.95 else (" ⚠" if pct < 0.5 else "")
+        text.append(f"  {label:<26}", style="default")
+        pts_str = f"{int(pts)}" if pts == int(pts) else f"{pts:.1f}"
+        mx_str = f"{int(mx)}" if mx == int(mx) else f"{mx:.1f}"
+        text.append(f"{pts_str:>4} / {mx_str}", style=score_style if pct < 0.5 else "default")
+        if tick:
+            style = "bold green" if "✓" in tick else "bold yellow"
+            text.append(tick, style=style)
+        text.append("\n")
+
+    top_fixes = result.get("top_fixes", [])
+    if top_fixes:
+        text.append("\n  Top 3 fixes by impact:\n")
+        for i, fix in enumerate(top_fixes[:3], 1):
+            pts_gained = fix.get("points_gained", 0)
+            effort = fix.get("effort_label", "")
+            desc = fix["description"]
+            pts_gained_str = f"+{int(pts_gained)}" if pts_gained == int(pts_gained) else f"+{pts_gained:.1f}"
+            text.append(f"  {i}. {desc}", style="default")
+            text.append(f" ({pts_gained_str} pts, {effort})\n", style="dim")
+
+    text.append("\n")
+
+    console.print()
+    console.print(Panel(
+        text,
+        title=f"[bold blue]AI Visibility Readiness Audit · {domain}[/bold blue]",
+        box=rich_box.ROUNDED,
+        padding=(0, 0),
+    ))
+    console.print()
+
+
+def _plain_print_audit(result: dict) -> None:
+    """Plain text fallback for audit-prospect when rich is unavailable."""
+    domain = result.get("domain", "")
+    score = result.get("score", 0)
+    grade = result.get("grade", "?")
+    pages = result.get("pages_sampled", 0)
+    elapsed = result.get("elapsed_seconds", 0)
+
+    CATEGORY_LABELS = {
+        "crawler_accessibility": "Crawler Accessibility",
+        "discovery_files": "Discovery Files",
+        "schema_markup": "Schema Markup",
+        "render_performance": "Render Performance",
+        "meta_html_quality": "Meta + HTML Quality",
+        "og_social": "Open Graph + Social",
+    }
+
+    print(f"\nAI VISIBILITY READINESS AUDIT -- {domain}")
+    print("=" * 60)
+    print(f"Score: {score} / 100  |  Grade: {grade}")
+    print(f"Sampled: {pages} pages  |  {elapsed}s")
+    print()
+    cats = result.get("categories", {})
+    for key, label in CATEGORY_LABELS.items():
+        cat = cats.get(key, {})
+        pts = cat.get("points", 0)
+        mx = cat.get("max_points", 0)
+        print(f"  {label:<26}  {pts:>5.1f} / {mx}")
+    top_fixes = result.get("top_fixes", [])
+    if top_fixes:
+        print("\nTop 3 fixes by impact:")
+        for i, fix in enumerate(top_fixes[:3], 1):
+            pts = fix.get("points_gained", 0)
+            effort = fix.get("effort_label", "")
+            print(f"  {i}. {fix['description']} (+{pts:.1f} pts, {effort})")
+    print()
+
+
 def _plain_print(result: dict) -> None:
     """Plain text fallback when rich is not available."""
     print("\nNote: install 'rich' for the polished output (pip install rich)")

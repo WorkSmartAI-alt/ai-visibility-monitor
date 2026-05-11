@@ -27,6 +27,7 @@ Free, no signup, no SaaS upsell. Customer keeps all data. Multi-engine in a sing
 - [Why this exists](#why-this-exists)
 - [Quick start](#quick-start)
 - [What you get](#what-you-get)
+- [Presets](#presets)
 - [Prospect audit (avm audit-prospect)](#prospect-audit-avm-audit-prospect)
 - [Adjacent query discovery (--expand)](#adjacent-query-discovery---expand)
 - [Source-surface categorization](#source-surface-categorization)
@@ -125,6 +126,42 @@ Each query runs N times (default 2) so the data is averaged across runs, not a s
 Pipe the JSON into a spreadsheet, a dashboard, a Slack notification, whatever you already use. The JSON is the deliverable.
 
 See [`sample-data/citations-example.json`](sample-data/citations-example.json) for a real anonymized run.
+
+## Presets
+
+Presets are bundled query sets you can run without a `queries.md` file.
+
+```bash
+# Run citation check against a preset
+avm --preset work-smart-mid-market
+
+# Dry-run to see the 21 queries before spending API budget
+avm --preset work-smart-mid-market --dry-run
+
+# List all available presets
+avm presets list
+
+# Inspect a preset's full query set
+avm presets show work-smart-mid-market
+```
+
+**Bundled preset: `work-smart-mid-market`**
+
+21 canonical buyer queries for mid-market AI consulting. The same query set
+Work-Smart.ai tracks weekly to measure its own visibility. Organized in four tiers:
+
+| Tier | Count | Description |
+|---|---|---|
+| alpha | 4 | Highest commercial intent (pricing, team adoption, AI visibility, prior failures) |
+| beta | 8 | Objection handlers and use-case anchors (privacy, ROI, lock-in, reporting, Excel) |
+| gamma | 8 | Industry-specific (construction, wealth management, legal, manufacturing) |
+| s_tier | 1 | Solopreneur entry point (scale without hiring) |
+
+Anyone who installs AVM can immediately benchmark against these 21 queries,
+see which AI engines cite them for these buyer searches, and identify where to invest.
+
+See [`avm/presets/README.md`](avm/presets/README.md) for the schema and how to
+contribute an industry-specific preset.
 
 ## Prospect audit (`avm audit-prospect`)
 

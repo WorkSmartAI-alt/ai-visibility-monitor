@@ -4,3 +4,4 @@ google-auth>=2.30.0
 google-analytics-data>=0.18.0
 rich>=13.0
 openai>=1.0.0
+pyyaml>=6.0

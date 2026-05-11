@@ -1,0 +1,146 @@
+name: work-smart-mid-market
+slug: work-smart-mid-market
+description: >
+  21 canonical buyer queries for mid-market AI consulting.
+  The query set Work-Smart.ai uses to track its own visibility weekly.
+  Tier alpha is the highest commercial intent (4 queries).
+  Tier beta is objection handlers and use-case anchors (8 queries).
+  Tier gamma is industry-specific (8 queries).
+  Tier s_tier is the scale-without-hiring solopreneur entry point (1 query).
+version: "2.0"
+last_updated: "2026-05-10"
+maintainer: Work-Smart.ai
+source_url: https://work-smart.ai/methodology
+license: MIT
+tier_summary:
+  alpha: 4
+  beta: 8
+  gamma: 8
+  s_tier: 1
+
+queries:
+  - id: Q01
+    text: "How much does it cost to hire a fractional Head of AI / AI consultant?"
+    tier: alpha
+    subtier: Commercial pillars
+    target_page: /pricing
+
+  - id: Q02
+    text: "How do I get my team to actually use the AI tools I paid for?"
+    tier: alpha
+    subtier: Commercial pillars
+    target_page: /methodology/ai-adoption
+
+  - id: Q03
+    text: "How do I appear in ChatGPT / Claude / Perplexity when prospects search?"
+    tier: alpha
+    subtier: Commercial pillars
+    target_page: /ai-visibility
+
+  - id: Q04
+    text: "Why did our previous AI tool / custom build / agency fail?"
+    tier: alpha
+    subtier: Commercial pillars
+    target_page: /blog/why-ai-implementations-fail
+
+  - id: Q05
+    text: "Will my data be private? Will the AI train on my information?"
+    tier: beta
+    subtier: Objection handlers
+    target_page: /methodology/data-privacy-and-compliance
+
+  - id: Q06
+    text: "How do I move from ChatGPT to Claude (or set up Claude for a small team)?"
+    tier: beta
+    subtier: Objection handlers
+    target_page: /services/ai-training
+
+  - id: Q07
+    text: "What's an AI Operating System and why do I need one?"
+    tier: beta
+    subtier: Objection handlers
+    target_page: /methodology/ai-operating-system
+
+  - id: Q08
+    text: "How do I prove ROI on AI consulting / measure intangible value?"
+    tier: beta
+    subtier: Objection handlers
+    target_page: /methodology/measuring-roi
+
+  - id: Q09
+    text: "How do I avoid lock-in to AI vendors, SaaS, and consultants?"
+    tier: beta
+    subtier: Use-case anchors
+    target_page: /methodology/no-lock-in
+
+  - id: Q10
+    text: "How do I automate reporting that takes me weeks?"
+    tier: beta
+    subtier: Use-case anchors
+    target_page: /use-cases/automated-reporting
+
+  - id: Q11
+    text: "How do I get useful AI from my Excel / spreadsheet mess?"
+    tier: beta
+    subtier: Use-case anchors
+    target_page: /use-cases/excel-to-ai
+
+  - id: Q12
+    text: "How do I extract knowledge from email and WhatsApp into a usable system?"
+    tier: beta
+    subtier: Use-case anchors
+    target_page: /use-cases/email-and-whatsapp-to-knowledge
+
+  - id: Q13
+    text: "How do I stop losing 10-15% of margin to inefficiencies on every project?"
+    tier: gamma
+    subtier: Construction and real estate
+    target_page: /industries/construction-real-estate/stop-margin-leak
+
+  - id: Q14
+    text: "How do I find what's in my contracts without reading 70 pages every time?"
+    tier: gamma
+    subtier: Construction and real estate
+    target_page: /industries/construction-real-estate/contract-intelligence
+
+  - id: Q15
+    text: "How do I get visibility into project margins before the project ends?"
+    tier: gamma
+    subtier: Construction and real estate
+    target_page: /industries/construction-real-estate/real-time-project-margins
+
+  - id: Q16
+    text: "How does a firm prepare an investor proposal in minutes vs hours?"
+    tier: gamma
+    subtier: Wealth management
+    target_page: /industries/wealth-management/proposal-automation
+
+  - id: Q17
+    text: "How do I make my wealth advisory firm appear in ChatGPT when prospects search?"
+    tier: gamma
+    subtier: Wealth management
+    target_page: /industries/wealth-management/ai-visibility-for-rias
+
+  - id: Q18
+    text: "How do I convert my law firm's PDF expertise into pages indexable by Google and LLMs?"
+    tier: gamma
+    subtier: Legal
+    target_page: /industries/legal/pdf-to-llm-citable
+
+  - id: Q19
+    text: "How do I qualify legal leads on WhatsApp without my team manually rescuing every conversation?"
+    tier: gamma
+    subtier: Legal
+    target_page: /industries/legal/whatsapp-lead-qualification
+
+  - id: Q20
+    text: "How do I extract data from WhatsApp orders into our ERP / billing?"
+    tier: gamma
+    subtier: Manufacturing and distribution
+    target_page: /industries/manufacturing-and-distribution/whatsapp-to-erp
+
+  - id: S01
+    text: "How do I scale a solopreneur business without hiring?"
+    tier: s_tier
+    subtier: Solopreneur entry point
+    target_page: /for-solopreneurs/scale-without-hiring

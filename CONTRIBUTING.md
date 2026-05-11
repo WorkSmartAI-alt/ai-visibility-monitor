@@ -11,6 +11,33 @@ Issues and PRs welcome.
 - Per-bot user-agent testing in `prereqs_sweep.py` (currently uses one generic UA, doesn't catch bot-specific divergences).
 - A `brand_mentions.py` extension to `citation_check.py` that scans the answer text (not just the citation URLs) for mentions of your brand without a link.
 
+## Contributing a preset
+
+Presets are the easiest contribution path. A preset is a YAML file in
+`avm/presets/` that bundles a curated query set for a specific buyer ICP.
+
+**To add a preset:**
+
+1. Copy the schema from `avm/presets/README.md`.
+2. Name the file `<slug>.yaml` (e.g. `law-firm-mid-market.yaml`).
+3. Add at minimum 10 queries, each with `id`, `text`, `tier`, and `target_page`.
+4. Run `avm presets list` to confirm it appears.
+5. Run `avm --preset <slug> --dry-run` to verify all queries load.
+6. Open a PR. Include: the ICP the preset targets, how the queries were sourced
+   (buyer interviews, keyword research, transcript corpus), and a sample run
+   showing the tool actually runs against a relevant domain.
+
+**Preset quality bar:** queries must be in buyer-frame phrasing ("How do I..."
+not "best AI tool for..."). Each query should map to a real page on the target
+domain (`target_page`) that answers it. Generic keyword-research phrasing that
+no buyer would actually type into ChatGPT will be asked to revise.
+
+**Planned presets (open to contributors):**
+- `law-firm-mid-market` (8-12 queries, legal industry ICP)
+- `wealth-management-ria` (8-12 queries, RIA / family office ICP)
+- `construction-general-contractor` (8-12 queries, construction ICP)
+- `b2b-saas-early-stage` (cross-vertical, SMB SaaS buyer)
+
 ## How to submit
 
 1. Open an issue first if it's a substantial change. A 30-second back-and-forth on scope saves an hour of rework.

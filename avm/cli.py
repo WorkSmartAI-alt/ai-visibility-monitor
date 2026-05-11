@@ -59,6 +59,12 @@ def main(argv: list[str] | None = None) -> int:
         default=None,
         help="Industry vertical for baseline comparisons (e.g. construction, legal, wealth_management, professional_services)",
     )
+    parser.add_argument(
+        "--preset",
+        default=None,
+        metavar="NAME",
+        help="Load queries from a bundled preset instead of queries.md (e.g. work-smart-mid-market)",
+    )
 
     subparsers = parser.add_subparsers(dest="command")
     subparsers.add_parser("setup", help="Run the setup wizard")
@@ -85,6 +91,18 @@ def main(argv: list[str] | None = None) -> int:
     audit_parser.add_argument("url", help="Domain to audit (e.g. https://example.com)")
     audit_parser.add_argument("--json", dest="output_json", action="store_true", help="Raw JSON output to stdout")
     audit_parser.add_argument("--timeout", type=int, default=5, help="Per-request HTTP timeout in seconds (default 5)")
+    audit_parser.add_argument(
+        "--preset",
+        default=None,
+        metavar="NAME",
+        help="Annotate report with preset query coverage for this domain",
+    )
+
+    presets_parser = subparsers.add_parser("presets", help="List and inspect bundled query presets")
+    presets_sub = presets_parser.add_subparsers(dest="presets_command")
+    presets_sub.add_parser("list", help="Show all available presets")
+    presets_show = presets_sub.add_parser("show", help="Print a preset's full content")
+    presets_show.add_argument("preset_name", help="Preset slug (e.g. work-smart-mid-market)")
 
     args = parser.parse_args(argv)
 
@@ -129,6 +147,9 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "audit-prospect":
         return _run_audit_prospect(args)
 
+    if args.command == "presets":
+        return _run_presets(args)
+
     return 0
 
 
@@ -138,30 +159,49 @@ def _run_citations(args: argparse.Namespace) -> int:
     from avm.config import load_queries, load_sites
     from avm.output import write_json, pretty_print
 
-    # Trigger wizard if config is incomplete
-    if not args.no_wizard:
-        from avm.wizard import should_run_wizard, run_wizard
-        if should_run_wizard():
-            proceed = run_wizard()
-            if not proceed:
-                return 0
+    preset_name = getattr(args, "preset", None)
 
-    queries_path = Path(args.queries)
-    if not queries_path.exists():
-        print(f"ERROR: {queries_path} not found. Run 'avm setup' to configure.", file=sys.stderr)
-        return 1
+    if preset_name:
+        # Load queries from bundled preset; skip wizard and queries.md
+        from avm.preset_loader import load_preset
+        try:
+            preset = load_preset(preset_name)
+        except (FileNotFoundError, ValueError) as exc:
+            print(f"ERROR: {exc}", file=sys.stderr)
+            return 1
+        queries = [q.text for q in preset.queries]
+        if args.dry_run:
+            print(f"[dry-run] loaded {len(queries)} queries from preset '{preset_name}'")
+            for q_obj in preset.queries:
+                tier_label = f"[{q_obj.tier}]" if q_obj.tier else ""
+                print(f"  {q_obj.id}. {q_obj.text}  {tier_label}  {q_obj.target_page}")
+            print("\n[dry-run] exiting without calling API.")
+            return 0
+    else:
+        # Trigger wizard if config is incomplete
+        if not args.no_wizard:
+            from avm.wizard import should_run_wizard, run_wizard
+            if should_run_wizard():
+                proceed = run_wizard()
+                if not proceed:
+                    return 0
 
-    queries = load_queries(queries_path)
-    if not queries:
-        print(f"ERROR: no queries found in {queries_path}", file=sys.stderr)
-        return 1
+        queries_path = Path(args.queries)
+        if not queries_path.exists():
+            print(f"ERROR: {queries_path} not found. Run 'avm setup' to configure.", file=sys.stderr)
+            return 1
 
-    if args.dry_run:
-        print(f"[dry-run] loaded {len(queries)} queries from {queries_path.name}")
-        for i, q in enumerate(queries, 1):
-            print(f"  {i}. {q}")
-        print("\n[dry-run] exiting without calling API.")
-        return 0
+        queries = load_queries(queries_path)
+        if not queries:
+            print(f"ERROR: no queries found in {queries_path}", file=sys.stderr)
+            return 1
+
+        if args.dry_run:
+            print(f"[dry-run] loaded {len(queries)} queries from {queries_path.name}")
+            for i, q in enumerate(queries, 1):
+                print(f"  {i}. {q}")
+            print("\n[dry-run] exiting without calling API.")
+            return 0
 
     sites_path = Path("sites.json")
     if sites_path.exists():
@@ -277,6 +317,73 @@ def _run_trend(args: argparse.Namespace) -> int:
         print(json_mod.dumps(result, indent=2))
     else:
         pretty_print_trend(result)
+    return 0
+
+
+def _run_presets(args: argparse.Namespace) -> int:
+    from avm.preset_loader import list_presets, load_preset
+
+    presets_command = getattr(args, "presets_command", None)
+
+    if presets_command == "show":
+        name = getattr(args, "preset_name", "")
+        try:
+            import yaml
+            from avm.preset_loader import _presets_dir
+            path = _presets_dir() / f"{name}.yaml"
+            if not path.exists():
+                print(f"ERROR: preset '{name}' not found.", file=sys.stderr)
+                return 1
+
+            try:
+                from rich.syntax import Syntax
+                from rich.console import Console
+                content = path.read_text(encoding="utf-8")
+                Console().print(Syntax(content, "yaml", theme="monokai", line_numbers=False))
+            except ImportError:
+                print(path.read_text(encoding="utf-8"))
+        except ImportError as exc:
+            print(f"ERROR: {exc}", file=sys.stderr)
+            return 1
+        return 0
+
+    # Default: list
+    presets = list_presets()
+    if not presets:
+        print("No presets found.")
+        return 0
+
+    try:
+        from rich.console import Console
+        from rich.table import Table
+        from rich import box as rich_box
+        console = Console()
+        table = Table(box=rich_box.SIMPLE, show_header=True, header_style="bold")
+        table.add_column("Name", style="bold cyan")
+        table.add_column("Queries", justify="right")
+        table.add_column("Version", justify="right")
+        table.add_column("Description")
+        for p in presets:
+            desc = p.description.split("\n")[0][:70]
+            table.add_row(p.name, str(p.query_count), p.version, desc)
+        console.print()
+        console.print("Available AVM presets:")
+        console.print()
+        console.print(table)
+        console.print("  Use [bold]avm presets show <name>[/bold] to see the full query set.")
+        console.print("  Use [bold]avm --preset <name>[/bold] to run citation check against the preset.")
+        console.print()
+    except ImportError:
+        print("\nAvailable AVM presets:\n")
+        print(f"  {'Name':<30} {'Queries':>8}  {'Version':>8}  Description")
+        print("  " + "-" * 70)
+        for p in presets:
+            desc = p.description.split("\n")[0][:45]
+            print(f"  {p.name:<30} {p.query_count:>8}  {p.version:>8}  {desc}")
+        print()
+        print("  Use `avm presets show <name>` to see the full query set.")
+        print("  Use `avm --preset <name>` to run citation check against the preset.")
+        print()
     return 0
 
 

@@ -53,7 +53,7 @@ This tool is the cheapest version of that check. Five queries × three engines, 
 ## Quick start
 
 ```bash
-pip install ai-visibility-monitor
+pip install git+https://github.com/WorkSmartAI-alt/ai-visibility-monitor
 avm
 ```
 

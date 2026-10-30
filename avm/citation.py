@@ -6,7 +6,7 @@ import time
 from datetime import datetime, timezone
 from urllib.parse import urlparse
 
-DEFAULT_MODEL = "claude-haiku-4-5-20251001"
+DEFAULT_MODEL = "claude-haiku-5-5"
 DEFAULT_RUNS = 2
 DEFAULT_MAX_SEARCHES = 5
 

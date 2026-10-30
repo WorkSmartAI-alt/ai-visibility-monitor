@@ -41,3 +41,5 @@ Thumbs.db
 # Local notebooks for ad-hoc analysis
 *.ipynb
 .ipynb_checkpoints/
+build/
+*.egg-info/

@@ -3,7 +3,7 @@ from __future__ import annotations
 ENGINE_REGISTRY: dict[str, dict] = {
     "claude": {
         "module": "avm.engines.claude",
-        "default_model": "claude-haiku-4-5-20251001",
+        "default_model": "claude-haiku-5-5",
         "api_key_env": "ANTHROPIC_API_KEY",
         "label": "Claude",
     },

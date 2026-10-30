@@ -91,7 +91,7 @@ Output goes to `data/citations-{timestamp}.json`. Schema:
   "generator": "citation_check.py",
   "version": "1.0",
   "target_domain": "your-domain.com",
-  "model": "claude-sonnet-4-6",
+  "model": "claude-haiku-5-5",
   "runs_per_query": 2,
   "summary": {
     "queries_total": 5,
@@ -387,15 +387,15 @@ Requires the Google Cloud SDK installed locally. See [Google ADC docs](https://c
 
 ## Choosing a model
 
-Default is `claude-haiku-4-5-20251001` for cost efficiency. For most queries (specific, branded, location-tagged) the citation results match the more expensive Sonnet 4.6 within ~80% overlap.
+Default is `claude-haiku-5-5` for cost efficiency (changed from `claude-haiku-4-5-20251001` in v0.2.3). The v0.2.0 comparison in `tests/model_comparison.md` found Haiku and Sonnet agreed on most citations for specific, branded or location-tagged queries; that comparison was run on the 4.x models and has not been repeated on 5.5.
 
 For broad or abstract category queries (e.g., "ai consultant for family offices"), citation variance is higher and you may want to opt up:
 
 ```bash
-avm --model claude-sonnet-4-6
+avm --model claude-sonnet-5-5
 ```
 
-That costs ~10x more per run (~$3 vs $0.30). Worth it for important deep-dive analyses, overkill for routine weekly checks.
+Sonnet costs more per token than Haiku (see [Anthropic pricing](https://platform.claude.com/docs/en/models/overview)), plus $10 per 1,000 web searches on either model. Use it for deep-dive analyses, not routine weekly checks. Any model ID the Anthropic API accepts works with `--model`.
 
 ## How this compares
 

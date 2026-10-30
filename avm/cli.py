@@ -33,7 +33,7 @@ def main(argv: list[str] | None = None) -> int:
             "  avm                          run citation check (wizard on first run)\n"
             "  avm setup                    re-run the setup wizard\n"
             "  avm --engines claude         Claude only (v0.1.x behavior)\n"
-            "  avm --model claude-sonnet-4-6 run with Sonnet instead of Haiku\n"
+            "  avm --model claude-sonnet-5-5 run with Sonnet instead of Haiku\n"
             "  avm --json                   raw JSON to stdout\n"
         ),
     )
